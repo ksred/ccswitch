@@ -69,9 +69,7 @@ func createSession(cmd *cobra.Command, args []string) {
 	fmt.Printf(ui.InfoStyle.Render("  Branch: %s\n"), branchName)
 	fmt.Printf(ui.InfoStyle.Render("  Location: ~/.ccswitch/worktrees/%s/%s\n"), repoName, sessionName)
 	
-	// Output the cd command for shell evaluation
-	homeDir, _ := os.UserHomeDir()
-	worktreePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName, sessionName)
+	// Output the switch command
 	fmt.Printf("\n# Run this to enter the session:\n")
-	fmt.Printf("cd %s\n", worktreePath)
+	fmt.Printf("ccswitch switch %s\n", sessionName)
 }
