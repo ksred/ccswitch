@@ -29,6 +29,17 @@ func GetMainRepoPath(dir string) (string, error) {
 	}
 	gitDir := strings.TrimSpace(string(output))
 	
+	// If gitDir is just ".git", we're in the main repo already
+	if gitDir == ".git" {
+		cmd = exec.Command("git", "rev-parse", "--show-toplevel")
+		cmd.Dir = dir
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			return "", err
+		}
+		return strings.TrimSpace(string(output)), nil
+	}
+	
 	// The main repo path is the parent of the .git directory
 	mainPath := filepath.Dir(gitDir)
 	
