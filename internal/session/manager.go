@@ -32,6 +32,10 @@ func NewManager(repoPath string) *Manager {
 	
 	repoName := filepath.Base(mainRepoPath)
 	cfg, _ := config.Load()
+	
+	// Debug output
+	fmt.Fprintf(os.Stderr, "DEBUG: NewManager - repoPath: %s, mainRepoPath: %s, repoName: %s\n", repoPath, mainRepoPath, repoName)
+	
 	return &Manager{
 		worktreeManager: git.NewWorktreeManager(mainRepoPath),
 		branchManager:   git.NewBranchManager(repoPath), // Keep current path for branch operations
