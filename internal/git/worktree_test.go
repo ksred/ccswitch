@@ -1,6 +1,10 @@
 package git
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -76,6 +80,201 @@ detached
 				}
 			}
 		})
+	}
+}
+
+func TestWorktreeManagerCreate(t *testing.T) {
+	// This test requires a git repository
+	tempDir := t.TempDir()
+	
+	// Initialize a git repository
+	cmd := exec.Command("git", "init")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to initialize git repository: %v", err)
+	}
+	
+	// Configure git user for the test repo
+	cmd = exec.Command("git", "config", "user.email", "test@example.com")
+	cmd.Dir = tempDir
+	cmd.Run()
+	
+	cmd = exec.Command("git", "config", "user.name", "Test User")
+	cmd.Dir = tempDir
+	cmd.Run()
+	
+	// Create an initial commit (required for worktrees)
+	testFile := filepath.Join(tempDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+	
+	cmd = exec.Command("git", "add", "test.txt")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to add file: %v", err)
+	}
+	
+	cmd = exec.Command("git", "commit", "-m", "initial commit")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to commit: %v", err)
+	}
+	
+	// Create a branch for the worktree
+	branchName := "feature/test-branch"
+	cmd = exec.Command("git", "branch", branchName)
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("Failed to create branch: %v", err)
+	}
+	
+	// Create WorktreeManager
+	wm := NewWorktreeManager(tempDir)
+	
+	// Test creating a worktree
+	worktreePath := filepath.Join(tempDir, "test-worktree")
+	err := wm.Create(worktreePath, branchName)
+	if err != nil {
+		t.Fatalf("WorktreeManager.Create() failed: %v", err)
+	}
+	
+	// Verify the worktree was created
+	if _, err := os.Stat(worktreePath); os.IsNotExist(err) {
+		t.Errorf("Worktree directory was not created at %s", worktreePath)
+	}
+	
+	// Verify it's a valid git worktree
+	cmd = exec.Command("git", "rev-parse", "--show-toplevel")
+	cmd.Dir = worktreePath
+	output, err := cmd.Output()
+	if err != nil {
+		t.Errorf("Created worktree is not a valid git directory: %v", err)
+	}
+	
+	toplevel := strings.TrimSpace(string(output))
+	// Clean paths for comparison (macOS sometimes adds /private prefix)
+	cleanToplevel := strings.TrimPrefix(toplevel, "/private")
+	cleanWorktreePath := strings.TrimPrefix(worktreePath, "/private")
+	if cleanToplevel != cleanWorktreePath {
+		t.Errorf("Worktree toplevel = %q, expected %q", toplevel, worktreePath)
+	}
+	
+	// Verify the branch
+	cmd = exec.Command("git", "branch", "--show-current")
+	cmd.Dir = worktreePath
+	output, err = cmd.Output()
+	if err != nil {
+		t.Errorf("Failed to get current branch: %v", err)
+	}
+	
+	currentBranch := strings.TrimSpace(string(output))
+	if currentBranch != branchName {
+		t.Errorf("Worktree branch = %q, expected %q", currentBranch, branchName)
+	}
+}
+
+func TestWorktreeManagerCreateWithMainRepoPath(t *testing.T) {
+	// This test verifies that worktrees are created correctly when WorktreeManager
+	// is initialized with the main repo path (not ".")
+	tempDir := t.TempDir()
+	
+	// Initialize a git repository
+	cmd := exec.Command("git", "init")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to initialize git repository: %v", err)
+	}
+	
+	// Configure git user for the test repo
+	cmd = exec.Command("git", "config", "user.email", "test@example.com")
+	cmd.Dir = tempDir
+	cmd.Run()
+	
+	cmd = exec.Command("git", "config", "user.name", "Test User")
+	cmd.Dir = tempDir
+	cmd.Run()
+	
+	// Create an initial commit
+	testFile := filepath.Join(tempDir, "test.txt")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+	
+	cmd = exec.Command("git", "add", "test.txt")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to add file: %v", err)
+	}
+	
+	cmd = exec.Command("git", "commit", "-m", "initial commit")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to commit: %v", err)
+	}
+	
+	// Get the main repo path (should handle the ".git" case correctly)
+	mainRepoPath, err := GetMainRepoPath(tempDir)
+	if err != nil {
+		t.Fatalf("GetMainRepoPath() failed: %v", err)
+	}
+	
+	// Create a branch
+	branchName := "feature/path-test"
+	cmd = exec.Command("git", "branch", branchName)
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("Failed to create branch: %v", err)
+	}
+	
+	// Create WorktreeManager with the main repo path
+	wm := NewWorktreeManager(mainRepoPath)
+	
+	// Simulate the path that would be used in real usage
+	repoName := filepath.Base(mainRepoPath)
+	
+	// For testing, use a path within tempDir instead
+	testWorktreePath := filepath.Join(tempDir, ".ccswitch", "worktrees", repoName, "test-session")
+	
+	// Ensure parent directory exists
+	if err := os.MkdirAll(filepath.Dir(testWorktreePath), 0755); err != nil {
+		t.Fatalf("Failed to create parent directory: %v", err)
+	}
+	
+	// Create the worktree
+	err = wm.Create(testWorktreePath, branchName)
+	if err != nil {
+		t.Fatalf("WorktreeManager.Create() failed: %v", err)
+	}
+	
+	// Verify the worktree was created in the correct location
+	if _, err := os.Stat(testWorktreePath); os.IsNotExist(err) {
+		t.Errorf("Worktree was not created at expected path %s", testWorktreePath)
+	}
+	
+	// List worktrees and verify our new one is there
+	worktrees, err := wm.List()
+	if err != nil {
+		t.Fatalf("WorktreeManager.List() failed: %v", err)
+	}
+	
+	found := false
+	for _, wt := range worktrees {
+		// Clean paths for comparison
+		cleanWtPath := strings.TrimPrefix(wt.Path, "/private")
+		cleanTestPath := strings.TrimPrefix(testWorktreePath, "/private")
+		
+		if cleanWtPath == cleanTestPath {
+			found = true
+			if wt.Branch != branchName {
+				t.Errorf("Worktree branch = %q, expected %q", wt.Branch, branchName)
+			}
+			break
+		}
+	}
+	
+	if !found {
+		t.Errorf("Created worktree not found in worktree list")
 	}
 }
 

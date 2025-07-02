@@ -76,12 +76,17 @@ func TestGetMainRepoPath(t *testing.T) {
 		t.Fatalf("GetMainRepoPath() from main repo failed: %v", err)
 	}
 	
-	// Clean paths for comparison
-	mainPath = strings.TrimPrefix(mainPath, "/private")
-	tempDir = strings.TrimPrefix(tempDir, "/private")
+	// The path should be absolute and point to tempDir
+	if !filepath.IsAbs(mainPath) {
+		t.Errorf("GetMainRepoPath() should return absolute path, got %q", mainPath)
+	}
 	
-	if mainPath != tempDir && mainPath != "." {
-		t.Errorf("GetMainRepoPath() from main = %q, expected %q or \".\"", mainPath, tempDir)
+	// Clean paths for comparison (macOS sometimes adds /private prefix)
+	cleanMainPath := strings.TrimPrefix(mainPath, "/private")
+	cleanTempDir := strings.TrimPrefix(tempDir, "/private")
+	
+	if cleanMainPath != cleanTempDir {
+		t.Errorf("GetMainRepoPath() from main = %q, expected %q", mainPath, tempDir)
 	}
 	
 	// Create a worktree
@@ -106,6 +111,54 @@ func TestGetMainRepoPath(t *testing.T) {
 	
 	if mainPathFromWorktree != tempDirClean {
 		t.Errorf("GetMainRepoPath() from worktree = %q, expected %q", mainPathFromWorktree, tempDirClean)
+	}
+}
+
+func TestGetMainRepoPathHandlesDotGit(t *testing.T) {
+	// This test specifically checks the fix for when git rev-parse --git-common-dir returns ".git"
+	tempDir := t.TempDir()
+	
+	// Initialize a git repository
+	cmd := exec.Command("git", "init")
+	cmd.Dir = tempDir
+	if err := cmd.Run(); err != nil {
+		t.Skipf("Failed to initialize git repository: %v", err)
+	}
+	
+	// Verify that git rev-parse --git-common-dir returns ".git" from main repo
+	cmd = exec.Command("git", "rev-parse", "--git-common-dir")
+	cmd.Dir = tempDir
+	output, err := cmd.Output()
+	if err != nil {
+		t.Skipf("Failed to run git rev-parse: %v", err)
+	}
+	
+	gitCommonDir := strings.TrimSpace(string(output))
+	if gitCommonDir != ".git" {
+		t.Skipf("Expected git rev-parse --git-common-dir to return '.git', got %q", gitCommonDir)
+	}
+	
+	// Now test that GetMainRepoPath handles this correctly
+	mainPath, err := GetMainRepoPath(tempDir)
+	if err != nil {
+		t.Fatalf("GetMainRepoPath() failed: %v", err)
+	}
+	
+	// The path should be absolute, not "."
+	if mainPath == "." {
+		t.Errorf("GetMainRepoPath() returned '.', should return absolute path")
+	}
+	
+	if !filepath.IsAbs(mainPath) {
+		t.Errorf("GetMainRepoPath() should return absolute path, got %q", mainPath)
+	}
+	
+	// Clean paths for comparison
+	cleanMainPath := strings.TrimPrefix(mainPath, "/private")
+	cleanTempDir := strings.TrimPrefix(tempDir, "/private")
+	
+	if cleanMainPath != cleanTempDir {
+		t.Errorf("GetMainRepoPath() = %q, expected %q", mainPath, tempDir)
 	}
 }
 
