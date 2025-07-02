@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -20,6 +21,9 @@ func NewWorktreeManager(repoPath string) *WorktreeManager {
 
 // Create creates a new worktree
 func (wm *WorktreeManager) Create(path, branch string) error {
+	// Debug: log the command being executed
+	fmt.Fprintf(os.Stderr, "DEBUG: git worktree add %s %s (from dir: %s)\n", path, branch, wm.repoPath)
+	
 	cmd := exec.Command("git", "worktree", "add", path, branch)
 	cmd.Dir = wm.repoPath
 	output, err := cmd.CombinedOutput()
