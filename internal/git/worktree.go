@@ -20,13 +20,7 @@ func NewWorktreeManager(repoPath string) *WorktreeManager {
 
 // Create creates a new worktree
 func (wm *WorktreeManager) Create(path, branch string) error {
-	// Ensure we use absolute path for the worktree
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("failed to get absolute path: %w", err)
-	}
-	
-	cmd := exec.Command("git", "worktree", "add", absPath, branch)
+	cmd := exec.Command("git", "worktree", "add", path, branch)
 	cmd.Dir = wm.repoPath
 	output, err := cmd.CombinedOutput()
 	if err != nil {

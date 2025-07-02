@@ -86,6 +86,10 @@ func (m *Manager) CreateSession(description string) error {
 		return err
 	}
 
+	// Debug: print the paths being used
+	fmt.Fprintf(os.Stderr, "DEBUG: Creating worktree at path: %s\n", worktreePath)
+	fmt.Fprintf(os.Stderr, "DEBUG: Manager repo path: %s\n", m.repoPath)
+	
 	// Create worktree
 	if err := m.worktreeManager.Create(worktreePath, branchName); err != nil {
 		// Try to clean up the branch we just created
