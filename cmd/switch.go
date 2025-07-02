@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/ksred/ccswitch/internal/git"
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
@@ -48,35 +47,25 @@ func switchSession(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		sessionName = args[0]
 	} else {
-		// Show numbered list for selection
-		fmt.Println(ui.TitleStyle.Render("📂 Select session to switch to:"))
-		fmt.Println()
+		// Use interactive selector
+		selector := ui.NewSessionSelector(sessions)
+		p := tea.NewProgram(selector)
 		
-		for i, session := range sessions {
-			fmt.Printf("  %d. %s (%s)\n", i+1, session.Name, ui.InfoStyle.Render(session.Branch))
-		}
-		
-		fmt.Println()
-		fmt.Print("Enter number (or q to quit): ")
-		
-		scanner := bufio.NewScanner(os.Stdin)
-		if !scanner.Scan() {
+		if _, err := p.Run(); err != nil {
+			fmt.Printf(ui.ErrorStyle.Render("✗ Failed to run selector: %v\n"), err)
 			return
 		}
 		
-		input := strings.TrimSpace(scanner.Text())
-		if input == "q" || input == "" {
+		if selector.IsQuit() {
 			return
 		}
 		
-		// Parse number
-		var choice int
-		if _, err := fmt.Sscanf(input, "%d", &choice); err != nil || choice < 1 || choice > len(sessions) {
-			fmt.Println(ui.ErrorStyle.Render("✗ Invalid selection"))
+		selected := selector.GetSelected()
+		if selected == nil {
 			return
 		}
 		
-		sessionName = sessions[choice-1].Name
+		sessionName = selected.Name
 	}
 
 	// Find the session
