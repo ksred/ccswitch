@@ -4,7 +4,7 @@ A friendly CLI tool for managing multiple git worktrees, perfect for juggling di
 
 ## 🎯 What is this?
 
-`ccswitch` (formerly `ccsplit`) helps you create and manage git worktrees with a clean, intuitive interface. Each worktree gets its own directory, letting you work on multiple features simultaneously without stashing changes or switching branches in place.
+`ccswitch` helps you create and manage git worktrees with a clean, intuitive interface. Each worktree gets its own directory, letting you work on multiple features simultaneously without stashing changes or switching branches in place.
 
 ## ✨ Features
 
