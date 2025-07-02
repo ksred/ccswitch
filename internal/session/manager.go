@@ -68,7 +68,14 @@ func (m *Manager) CreateSession(description string) error {
 		return errors.Wrap(err, "failed to get home directory")
 	}
 	
-	worktreeBasePath := filepath.Join(homeDir, ".ccswitch", "worktrees", m.repoName)
+	// Get repo name from the main repo path
+	mainRepoPath, err := git.GetMainRepoPath(m.repoPath)
+	if err != nil {
+		mainRepoPath = m.repoPath
+	}
+	repoName := filepath.Base(mainRepoPath)
+	
+	worktreeBasePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName)
 	worktreePath := filepath.Join(worktreeBasePath, sessionName)
 
 	// Check if worktree directory already exists
@@ -86,10 +93,6 @@ func (m *Manager) CreateSession(description string) error {
 		return err
 	}
 
-	// Debug: print the paths being used
-	fmt.Fprintf(os.Stderr, "DEBUG: Creating worktree at path: %s\n", worktreePath)
-	fmt.Fprintf(os.Stderr, "DEBUG: Manager repo path: %s\n", m.repoPath)
-	
 	// Create worktree
 	if err := m.worktreeManager.Create(worktreePath, branchName); err != nil {
 		// Try to clean up the branch we just created
