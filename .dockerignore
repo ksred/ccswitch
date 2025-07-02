@@ -1,0 +1,23 @@
+# Ignore build artifacts
+ccsplit
+*.out
+*.html
+
+# Ignore test artifacts
+coverage.out
+coverage.html
+
+# Ignore git files (we want a clean git env in Docker)
+.git
+.gitignore
+
+# Ignore editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db

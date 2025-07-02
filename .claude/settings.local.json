@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./bash_wrapper_test.sh:*)",
+      "Bash(./ccsplit)",
+      "Bash(./ccsplit switch)",
+      "Bash(./ccswitch)",
+      "Bash(./ccswitch switch test-switch-command)",
+      "Bash(./ccswitch:*)"
+    ],
+    "deny": []
+  }
+}

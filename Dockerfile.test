@@ -1,0 +1,25 @@
+# Simple Docker container for running tests in a clean git environment
+FROM golang:1.21-alpine
+
+# Install git and other dependencies
+RUN apk add --no-cache git bash make
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Configure git for testing
+RUN git config --global user.email "test@example.com" && \
+    git config --global user.name "Test User" && \
+    git config --global init.defaultBranch main
+
+# Run tests
+CMD ["go", "test", "-v", "-cover", "./..."]
