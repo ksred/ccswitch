@@ -85,16 +85,41 @@ func ParseWorktrees(output string) []Worktree {
 // GetSessionsFromWorktrees extracts session information from worktrees
 func GetSessionsFromWorktrees(worktrees []Worktree, repoName string) []SessionInfo {
 	var sessions []SessionInfo
-	pattern := filepath.Join(".ccswitch", "worktrees", repoName)
 	
+	// First, find and add the main repository
 	for _, wt := range worktrees {
-		if strings.Contains(wt.Path, pattern) && wt.Branch != "" {
-			sessionName := filepath.Base(wt.Path)
+		// Check if this is the main worktree (not in .ccswitch directory)
+		if !strings.Contains(wt.Path, ".ccswitch") && wt.Branch != "" {
+			// This is likely the main repository
 			sessions = append(sessions, SessionInfo{
-				Name:   sessionName,
+				Name:   "main",
 				Branch: wt.Branch,
 				Path:   wt.Path,
 			})
+			break // There should only be one main repository
+		}
+	}
+	
+	// Then add all ccswitch worktrees for this specific repo
+	// The pattern should match worktrees that belong to this repository
+	for _, wt := range worktrees {
+		// Check if it's a ccswitch worktree and extract the repo name from path
+		if strings.Contains(wt.Path, ".ccswitch/worktrees/") && wt.Branch != "" {
+			// Extract repo name from path to ensure we only show worktrees for current repo
+			parts := strings.Split(wt.Path, string(filepath.Separator))
+			for i, part := range parts {
+				if part == ".ccswitch" && i+2 < len(parts) && parts[i+1] == "worktrees" {
+					if i+2 < len(parts) && parts[i+2] == repoName {
+						sessionName := filepath.Base(wt.Path)
+						sessions = append(sessions, SessionInfo{
+							Name:   sessionName,
+							Branch: wt.Branch,
+							Path:   wt.Path,
+						})
+					}
+					break
+				}
+			}
 		}
 	}
 	

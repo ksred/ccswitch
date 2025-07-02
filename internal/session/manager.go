@@ -23,11 +23,18 @@ type Manager struct {
 
 // NewManager creates a new session manager
 func NewManager(repoPath string) *Manager {
-	repoName := filepath.Base(repoPath)
+	// Get the main repository path to ensure we list all worktrees
+	mainRepoPath, err := git.GetMainRepoPath(repoPath)
+	if err != nil {
+		// Fallback to the provided path if we can't get the main repo
+		mainRepoPath = repoPath
+	}
+	
+	repoName := filepath.Base(mainRepoPath)
 	cfg, _ := config.Load()
 	return &Manager{
-		worktreeManager: git.NewWorktreeManager(repoPath),
-		branchManager:   git.NewBranchManager(repoPath),
+		worktreeManager: git.NewWorktreeManager(mainRepoPath),
+		branchManager:   git.NewBranchManager(repoPath), // Keep current path for branch operations
 		config:          cfg,
 		repoPath:        repoPath,
 		repoName:        repoName,
