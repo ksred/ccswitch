@@ -15,6 +15,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func newCreateCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "create",
+		Short: "Create a new session",
+		Run:   createSession,
+	}
+}
+
 func createSession(cmd *cobra.Command, args []string) {
 	// Get current directory
 	currentDir, err := os.Getwd()

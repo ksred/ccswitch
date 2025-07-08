@@ -1,6 +1,7 @@
 package git
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -57,4 +58,29 @@ func GetMainRepoPath(dir string) (string, error) {
 	}
 	
 	return mainPath, nil
+}
+
+// IsGitRepository checks if the directory is a git repository
+func IsGitRepository(dir string) bool {
+	_, err := os.Stat(filepath.Join(dir, ".git"))
+	if err == nil {
+		return true
+	}
+	
+	// Check if we're in a worktree or subdirectory
+	cmd := exec.Command("git", "rev-parse", "--git-dir")
+	cmd.Dir = dir
+	err = cmd.Run()
+	return err == nil
+}
+
+// GetCurrentBranch returns the current branch name
+func GetCurrentBranch(dir string) (string, error) {
+	cmd := exec.Command("git", "branch", "--show-current")
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(output)), nil
 }
