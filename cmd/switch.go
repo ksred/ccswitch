@@ -5,7 +5,6 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/ksred/ccswitch/internal/git"
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
 	"github.com/ksred/ccswitch/internal/utils"
@@ -14,9 +13,8 @@ import (
 
 func newSwitchCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "switch [session-name]",
+		Use:   "switch",
 		Short: "Switch to an existing session",
-		Args:  cobra.MaximumNArgs(1),
 		Run:   switchSession,
 	}
 }
@@ -44,48 +42,31 @@ func switchSession(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	var sessionName string
-	if len(args) > 0 {
-		sessionName = args[0]
-	} else {
-		// Use interactive selector
-		selector := ui.NewSessionSelector(sessions)
-		p := tea.NewProgram(selector)
-		
-		if _, err := p.Run(); err != nil {
-			fmt.Printf(ui.ErrorStyle.Render("✗ Failed to run selector: %v\n"), err)
-			return
-		}
-		
-		if selector.IsQuit() {
-			return
-		}
-		
-		selected := selector.GetSelected()
-		if selected == nil {
-			return
-		}
-		
-		sessionName = selected.Name
+	// Always use interactive selector
+	selector := ui.NewSessionSelector(sessions)
+	p := tea.NewProgram(selector)
+	
+	if _, err := p.Run(); err != nil {
+		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to run selector: %v\n"), err)
+		return
 	}
-
-	// Find the session
-	var targetSession *git.SessionInfo
-	for _, s := range sessions {
-		if s.Name == sessionName {
-			s := s // Create a copy to take address of
-			targetSession = &s
-			break
-		}
+	
+	if selector.IsQuit() {
+		return
 	}
-
-	if targetSession == nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Session not found: %s\n"), sessionName)
+	
+	selected := selector.GetSelected()
+	if selected == nil {
 		return
 	}
 
+	// Output success message with consistent formatting
+	fmt.Printf(ui.SuccessStyle.Render("✓ Switched to session: %s\n"), selected.Name)
+	fmt.Printf(ui.InfoStyle.Render("Branch: %s\n"), selected.Branch)
+	fmt.Printf(ui.InfoStyle.Render("Location: %s\n"), selected.Path)
+
 	// Output the cd command for shell evaluation
-	fmt.Printf("cd %s\n", targetSession.Path)
+	fmt.Printf("\ncd %s\n", selected.Path)
 	
 	// If shell integration is not active, show a helpful message
 	if !utils.IsShellIntegrationActive() {

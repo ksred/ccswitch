@@ -35,26 +35,37 @@ ccswitch() {
             CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@"
             ;;
         switch)
-            # For switch command, capture output and execute cd command
-            local output=$(CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@")
-            echo "$output"
+            # For switch command, need to preserve TTY for interactive selector
+            local temp_file=$(mktemp)
+            
+            # Run command with TTY preserved, redirect output to temp file
+            CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@" | tee "$temp_file"
             
             # Extract and execute the cd command if switch was successful
-            local cd_cmd=$(echo "$output" | grep "^cd " | tail -1)
+            local cd_cmd=$(grep "^cd " "$temp_file" | tail -1)
             if [ -n "$cd_cmd" ]; then
                 eval "$cd_cmd"
             fi
+            
+            # Clean up temp file
+            rm -f "$temp_file"
             ;;
-        *)
-            # For session creation (default command)
-            local output=$(CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@")
-            echo "$output"
-
+        create|*)
+            # For session creation (default command and explicit create)
+            # Need to preserve stdin for interactive input, then capture cd command
+            local temp_file=$(mktemp)
+            
+            # Run command with stdin preserved, redirect output to temp file
+            CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@" | tee "$temp_file"
+            
             # Extract and execute the cd command if session was created successfully
-            local cd_cmd=$(echo "$output" | grep "^cd " | tail -1)
+            local cd_cmd=$(grep "^cd " "$temp_file" | tail -1)
             if [ -n "$cd_cmd" ]; then
                 eval "$cd_cmd"
             fi
+            
+            # Clean up temp file
+            rm -f "$temp_file"
             ;;
     esac
 }
@@ -71,7 +82,7 @@ _ccswitch_completions() {
         COMPREPLY=($(compgen -W "$sessions" -- "$cur"))
     elif [[ "$COMP_CWORD" -eq 1 ]]; then
         # Complete command names
-        COMPREPLY=($(compgen -W "list switch cleanup info shell-init" -- "$cur"))
+        COMPREPLY=($(compgen -W "list switch cleanup create info shell-init" -- "$cur"))
     fi
 }
 

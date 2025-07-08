@@ -11,7 +11,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "Manage development sessions across git worktrees",
 		Long: `ccswitch helps you work on multiple features simultaneously without the 
 context-switching overhead of stashing changes or switching branches.`,
-		Run: switchSession,
+		Run: createSession,
 	}
 
 	rootCmd.AddCommand(newCreateCmd())

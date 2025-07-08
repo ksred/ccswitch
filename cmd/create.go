@@ -78,11 +78,11 @@ func createSession(cmd *cobra.Command, args []string) {
 	worktreePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName, sessionName)
 	
 	fmt.Printf(ui.SuccessStyle.Render("✓ Created session: %s\n"), sessionName)
-	fmt.Printf(ui.InfoStyle.Render("  Branch: %s\n"), branchName)
-	fmt.Printf(ui.InfoStyle.Render("  Location: ~/.ccswitch/worktrees/%s/%s\n"), repoName, sessionName)
+	fmt.Printf(ui.InfoStyle.Render("Branch: %s\n"), branchName)
+	fmt.Printf(ui.InfoStyle.Render("Location: ~/.ccswitch/worktrees/%s/%s\n"), repoName, sessionName)
 	
-	// Output the cd command for the shell wrapper to execute
-	fmt.Printf("cd %s\n", worktreePath)
+	// Output the cd command for the shell wrapper to execute on a separate line
+	fmt.Printf("\ncd %s\n", worktreePath)
 	
 	// If shell integration is not active, show a helpful message
 	if !utils.IsShellIntegrationActive() {
