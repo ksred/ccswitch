@@ -44,11 +44,6 @@ func NewManager(repoPath string) *Manager {
 
 // CreateSession creates a new work session
 func (m *Manager) CreateSession(description string) error {
-	// Check for uncommitted changes
-	if m.branchManager.HasUncommittedChanges() {
-		return errors.ErrUncommittedChanges
-	}
-
 	branchName := m.config.Branch.Prefix + utils.Slugify(description)
 	sessionName := utils.Slugify(description)
 
