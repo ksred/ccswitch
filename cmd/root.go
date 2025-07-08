@@ -19,6 +19,8 @@ context-switching overhead of stashing changes or switching branches.`,
 	rootCmd.AddCommand(newSwitchCmd())
 	rootCmd.AddCommand(newInfoCmd())
 	rootCmd.AddCommand(newConfigCmd())
+	rootCmd.AddCommand(newPRCmd())
+	rootCmd.AddCommand(newShellInitCmd())
 
 	return rootCmd
 }

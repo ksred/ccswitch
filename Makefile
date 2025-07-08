@@ -37,19 +37,22 @@ install: build
 		echo "✓ Installed binary to $$FIRST_GOPATH/bin/$(BINARY_NAME)"
 	@echo ""
 	@# Install shell integration
-	@echo "Installing shell integration..."
+	@echo "Setting up shell integration..."
 	@SHELL_CONFIG=""; \
+	SHELL_NAME=""; \
 	if [ -n "$$ZSH_VERSION" ] || [ "$$SHELL" = "/bin/zsh" ] || [ "$$SHELL" = "/usr/bin/zsh" ]; then \
 		SHELL_CONFIG="$$HOME/.zshrc"; \
+		SHELL_NAME="zsh"; \
 	elif [ -n "$$BASH_VERSION" ] || [ "$$SHELL" = "/bin/bash" ] || [ "$$SHELL" = "/usr/bin/bash" ]; then \
 		SHELL_CONFIG="$$HOME/.bashrc"; \
+		SHELL_NAME="bash"; \
 	fi; \
 	if [ -n "$$SHELL_CONFIG" ]; then \
-		BASH_TXT_PATH="$$(pwd)/bash.txt"; \
-		if ! grep -q "source $$BASH_TXT_PATH" "$$SHELL_CONFIG" 2>/dev/null; then \
+		if ! grep -q "eval \"\$$(ccswitch shell-init)\"" "$$SHELL_CONFIG" 2>/dev/null && \
+		   ! grep -q "source.*ccswitch/bash.txt" "$$SHELL_CONFIG" 2>/dev/null; then \
 			echo "" >> "$$SHELL_CONFIG"; \
 			echo "# ccswitch shell integration" >> "$$SHELL_CONFIG"; \
-			echo "source $$BASH_TXT_PATH" >> "$$SHELL_CONFIG"; \
+			echo 'eval "$$(ccswitch shell-init)"' >> "$$SHELL_CONFIG"; \
 			echo "✓ Added shell integration to $$SHELL_CONFIG"; \
 			echo ""; \
 			echo "To activate now, run:"; \
@@ -58,8 +61,14 @@ install: build
 			echo "✓ Shell integration already installed in $$SHELL_CONFIG"; \
 		fi; \
 	else \
-		echo "⚠️  Could not detect shell type. Please manually add to your shell config:"; \
-		echo "  source $$(pwd)/bash.txt"; \
+		echo ""; \
+		echo "⚠️  Could not detect shell type. To enable shell integration, add this to your shell config:"; \
+		echo ""; \
+		echo "  eval \"\$$(ccswitch shell-init)\""; \
+		echo ""; \
+		echo "For example:"; \
+		echo "  echo 'eval \"\$$(ccswitch shell-init)\"' >> ~/.bashrc"; \
+		echo "  source ~/.bashrc"; \
 	fi
 
 # Uninstall ccswitch
@@ -77,10 +86,12 @@ uninstall:
 		SHELL_CONFIG="$$HOME/.bashrc"; \
 	fi; \
 	if [ -n "$$SHELL_CONFIG" ]; then \
-		BASH_TXT_PATH="$$(pwd)/bash.txt"; \
-		if grep -q "source $$BASH_TXT_PATH" "$$SHELL_CONFIG" 2>/dev/null; then \
+		if grep -q "eval \"\$$(ccswitch shell-init)\"" "$$SHELL_CONFIG" 2>/dev/null || \
+		   grep -q "source.*ccswitch/bash.txt" "$$SHELL_CONFIG" 2>/dev/null; then \
 			cp "$$SHELL_CONFIG" "$$SHELL_CONFIG.bak"; \
-			grep -v "source $$BASH_TXT_PATH" "$$SHELL_CONFIG.bak" | grep -v "# ccswitch shell integration" > "$$SHELL_CONFIG"; \
+			grep -v "eval \"\$$(ccswitch shell-init)\"" "$$SHELL_CONFIG.bak" | \
+			grep -v "source.*ccswitch/bash.txt" | \
+			grep -v "# ccswitch shell integration" > "$$SHELL_CONFIG"; \
 			rm "$$SHELL_CONFIG.bak"; \
 			echo "✓ Removed shell integration from $$SHELL_CONFIG"; \
 		else \

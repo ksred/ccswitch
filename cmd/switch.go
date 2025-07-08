@@ -8,6 +8,7 @@ import (
 	"github.com/ksred/ccswitch/internal/git"
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
+	"github.com/ksred/ccswitch/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -85,4 +86,11 @@ func switchSession(cmd *cobra.Command, args []string) {
 
 	// Output the cd command for shell evaluation
 	fmt.Printf("cd %s\n", targetSession.Path)
+	
+	// If shell integration is not active, show a helpful message
+	if !utils.IsShellIntegrationActive() {
+		fmt.Println()
+		fmt.Println(ui.InfoStyle.Render("💡 Note: Shell integration is not active."))
+		fmt.Println(ui.InfoStyle.Render(utils.GetShellIntegrationInstructions()))
+	}
 }

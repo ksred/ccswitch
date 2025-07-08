@@ -65,11 +65,21 @@ func createSession(cmd *cobra.Command, args []string) {
 	branchName := cfg.Branch.Prefix + sessionName
 	repoName := filepath.Base(currentDir)
 	
+	// Get the full worktree path
+	homeDir, _ := os.UserHomeDir()
+	worktreePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName, sessionName)
+	
 	fmt.Printf(ui.SuccessStyle.Render("✓ Created session: %s\n"), sessionName)
 	fmt.Printf(ui.InfoStyle.Render("  Branch: %s\n"), branchName)
 	fmt.Printf(ui.InfoStyle.Render("  Location: ~/.ccswitch/worktrees/%s/%s\n"), repoName, sessionName)
 	
-	// Output the switch command
-	fmt.Printf("\n# Run this to enter the session:\n")
-	fmt.Printf("ccswitch switch %s\n", sessionName)
+	// Output the cd command for the shell wrapper to execute
+	fmt.Printf("cd %s\n", worktreePath)
+	
+	// If shell integration is not active, show a helpful message
+	if !utils.IsShellIntegrationActive() {
+		fmt.Println()
+		fmt.Println(ui.InfoStyle.Render("💡 Note: Shell integration is not active."))
+		fmt.Println(ui.InfoStyle.Render(utils.GetShellIntegrationInstructions()))
+	}
 }
