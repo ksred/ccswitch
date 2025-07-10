@@ -30,18 +30,14 @@ func shellInit(cmd *cobra.Command, args []string) {
 	fmt.Print(`# ccswitch shell wrapper function
 ccswitch() {
     case "$1" in
-        list|cleanup|info|shell-init)
-            # These commands don't need special handling
-            CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@"
-            ;;
-        switch)
-            # For switch command, need to preserve TTY for interactive selector
+        list)
+            # For list command, need to preserve TTY for interactive selector
             local temp_file=$(mktemp)
             
             # Run command with TTY preserved, redirect output to temp file
             CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@" | tee "$temp_file"
             
-            # Extract and execute the cd command if switch was successful
+            # Extract and execute the cd command if session was selected
             local cd_cmd=$(grep "^cd " "$temp_file" | tail -1)
             if [ -n "$cd_cmd" ]; then
                 eval "$cd_cmd"
@@ -49,6 +45,10 @@ ccswitch() {
             
             # Clean up temp file
             rm -f "$temp_file"
+            ;;
+        cleanup|info|shell-init)
+            # These commands don't need special handling
+            CCSWITCH_SHELL_WRAPPER=1 command ccswitch "$@"
             ;;
         create|*)
             # For session creation (default command and explicit create)
@@ -75,14 +75,14 @@ _ccswitch_completions() {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     
-    # Only provide completions for switch and cleanup commands
-    if [[ "$prev" == "switch" ]] || [[ "$prev" == "cleanup" ]]; then
-        # Get list of sessions
-        local sessions=$(command ccswitch list 2>/dev/null | grep -E "^[[:space:]]*[[:digit:]]+\." | awk '{print $2}' | grep -v "Active" | grep -v "No active")
+    # Only provide completions for cleanup command
+    if [[ "$prev" == "cleanup" ]]; then
+        # Get list of sessions by running list non-interactively
+        local sessions=$(CCSWITCH_SHELL_WRAPPER=1 command ccswitch list 2>&1 | grep -E "^→" | sed 's/^→ //' | awk '{print $1}')
         COMPREPLY=($(compgen -W "$sessions" -- "$cur"))
     elif [[ "$COMP_CWORD" -eq 1 ]]; then
         # Complete command names
-        COMPREPLY=($(compgen -W "list switch cleanup create info shell-init" -- "$cur"))
+        COMPREPLY=($(compgen -W "list cleanup create info shell-init" -- "$cur"))
     fi
 }
 
