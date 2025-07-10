@@ -3,8 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/ksred/ccswitch/internal/git"
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
 	"github.com/ksred/ccswitch/internal/utils"
@@ -12,11 +15,19 @@ import (
 )
 
 func newSwitchCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "switch",
-		Short: "Switch to an existing session",
-		Run:   switchSession,
+	cmd := &cobra.Command{
+		Use:   "switch [list|<number>]",
+		Short: "Switch to an existing session or list all sessions",
+		Long: `Switch to an existing session interactively or by number.
+
+Usage:
+  ccswitch switch         # Interactive session selector
+  ccswitch switch list    # List all sessions with numbers
+  ccswitch switch <num>   # Switch to session by number`,
+		Run: switchSession,
 	}
+	
+	return cmd
 }
 
 func switchSession(cmd *cobra.Command, args []string) {
@@ -42,7 +53,26 @@ func switchSession(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Always use interactive selector
+	// Check if we should list sessions
+	if len(args) > 0 && args[0] == "list" {
+		listSessionsWithNumbers(sessions, currentDir)
+		return
+	}
+
+	// Check if a number was provided
+	if len(args) > 0 {
+		num, err := strconv.Atoi(args[0])
+		if err == nil && num > 0 && num <= len(sessions) {
+			selected := &sessions[num-1]
+			performSwitch(selected)
+			return
+		}
+		fmt.Printf(ui.ErrorStyle.Render("✗ Invalid session number: %s\n"), args[0])
+		fmt.Printf(ui.InfoStyle.Render("Use 'ccswitch switch list' to see available sessions\n"))
+		return
+	}
+
+	// Use interactive selector
 	selector := ui.NewSessionSelector(sessions)
 	p := tea.NewProgram(selector)
 	
@@ -60,10 +90,49 @@ func switchSession(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	performSwitch(selected)
+}
+
+func listSessionsWithNumbers(sessions []git.SessionInfo, currentDir string) {
+	fmt.Println(ui.TitleStyle.Render("📁 Active Sessions:"))
+	fmt.Println()
+
+	// Find the longest session name for alignment
+	maxLen := 0
+	for _, session := range sessions {
+		if len(session.Name) > maxLen {
+			maxLen = len(session.Name)
+		}
+	}
+
+	// Display sessions in a simple list
+	for i, session := range sessions {
+		// Session number
+		fmt.Printf("  %d. ", i+1)
+		
+		// Session name (padded for alignment)
+		fmt.Printf("%-*s  ", maxLen, ui.SuccessStyle.Render(session.Name))
+		
+		// Branch info
+		fmt.Printf("%s  ", ui.InfoStyle.Render(session.Branch))
+		
+		// Path (relative if possible)
+		relPath, err := filepath.Rel(currentDir, session.Path)
+		if err != nil {
+			relPath = session.Path
+		}
+		fmt.Printf("%s\n", ui.InfoStyle.Render(relPath))
+	}
+	
+	fmt.Println()
+	fmt.Println(ui.InfoStyle.Render("Use 'ccswitch switch <number>' to switch to a session"))
+}
+
+func performSwitch(selected *git.SessionInfo) {
 	// Output success message with consistent formatting
-	fmt.Printf(ui.SuccessStyle.Render("✓ Switched to session: %s\n"), selected.Name)
-	fmt.Printf(ui.InfoStyle.Render("Branch: %s\n"), selected.Branch)
-	fmt.Printf(ui.InfoStyle.Render("Location: %s\n"), selected.Path)
+	fmt.Printf("%s %s\n", ui.SuccessStyle.Render("✓ Switched to session:"), selected.Name)
+	fmt.Printf("Branch: %s\n", selected.Branch)
+	fmt.Printf("Location: %s\n", selected.Path)
 
 	// Output the cd command for shell evaluation
 	fmt.Printf("\ncd %s\n", selected.Path)
@@ -72,6 +141,6 @@ func switchSession(cmd *cobra.Command, args []string) {
 	if !utils.IsShellIntegrationActive() {
 		fmt.Println()
 		fmt.Println(ui.InfoStyle.Render("💡 Note: Shell integration is not active."))
-		fmt.Println(ui.InfoStyle.Render(utils.GetShellIntegrationInstructions()))
+		fmt.Println(utils.GetShellIntegrationInstructions())
 	}
 }
