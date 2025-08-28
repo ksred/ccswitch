@@ -10,7 +10,14 @@ func NewRootCmd() *cobra.Command {
 		Use:   "ccswitch",
 		Short: "Manage development sessions across git worktrees",
 		Long: `ccswitch helps you work on multiple features simultaneously without the 
-context-switching overhead of stashing changes or switching branches.`,
+context-switching overhead of stashing changes or switching branches.
+
+Key commands:
+  ccswitch                    Create a new work session
+  ccswitch list               Show and switch between sessions
+  ccswitch cleanup            Remove a session interactively
+  ccswitch cleanup --all      Remove ALL worktrees at once (bulk cleanup)
+  ccswitch pr                 Create a pull request for current session`,
 		Run: createSession,
 	}
 

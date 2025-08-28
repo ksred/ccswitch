@@ -11,6 +11,7 @@ A friendly CLI tool for managing multiple git worktrees, perfect for juggling di
 - **🚀 Quick Session Creation** - Describe what you're working on, get a branch and worktree instantly
 - **📋 Interactive Session List** - See all your active work sessions with a clean TUI
 - **🧹 Smart Cleanup** - Remove worktrees and optionally delete branches when done
+- **🗑️ Bulk Cleanup** - Remove ALL worktrees at once with `cleanup --all` (perfect for spring cleaning!)
 - **🐚 Shell Integration** - Automatically `cd` into new worktrees (no copy-pasting paths!)
 - **🎨 Pretty Output** - Color-coded messages and clean formatting
 
@@ -80,6 +81,20 @@ ccswitch cleanup
 ccswitch cleanup fix-authentication-bug
 # Delete branch feature/fix-authentication-bug? (y/N): y
 # ✓ Removed session and branch: fix-authentication-bug
+
+# Bulk cleanup - remove ALL worktrees at once!
+ccswitch cleanup --all
+# ⚠️  You are about to remove the following worktrees:
+#   • feature-1 (feature/feature-1)
+#   • feature-2 (feature/feature-2)
+#   • bugfix-1 (feature/bugfix-1)
+# Press Enter to continue or Ctrl+C to cancel...
+# Delete associated branches as well? (y/N): y
+# ✓ Successfully removed: feature-1
+# ✓ Successfully removed: feature-2
+# ✓ Successfully removed: bugfix-1
+# ✅ All 3 worktrees removed successfully!
+# ✓ Switched to main branch
 ```
 
 ## 🛠️ Development
