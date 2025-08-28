@@ -6,7 +6,11 @@
       "Bash(./ccsplit switch)",
       "Bash(./ccswitch)",
       "Bash(./ccswitch switch test-switch-command)",
-      "Bash(./ccswitch:*)"
+      "Bash(./ccswitch:*)",
+      "Bash(declare:*)",
+      "Bash(ccswitch list:*)",
+      "Bash(ccswitch switch:*)",
+      "Bash(gtimeout:*)"
     ],
     "deny": []
   }

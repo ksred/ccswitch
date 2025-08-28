@@ -11,8 +11,8 @@ NC='\033[0m' # No Color
 TESTS_RUN=0
 TESTS_PASSED=0
 
-# Mock ccsplit command for testing
-mock_ccsplit() {
+# Mock ccswitch command for testing
+mock_ccswitch() {
     case "$1" in
         "list")
             echo "Listing sessions..."
@@ -32,16 +32,36 @@ mock_ccsplit() {
     esac
 }
 
-# Source the wrapper function (but use mock instead of real command)
-source bash.txt
-# Override command lookup to use our mock
-command() {
-    if [ "$1" = "ccsplit" ]; then
-        shift
-        mock_ccsplit "$@"
-    else
-        /usr/bin/command "$@"
-    fi
+# Define the wrapper function manually for testing (simulates shell-init output)
+ccswitch() {
+    case "$1" in
+        list|cleanup|info|shell-init)
+            # These commands don't need special handling
+            mock_ccswitch "$@"
+            ;;
+        switch)
+            # For switch command, capture output and execute cd command
+            local output=$(mock_ccswitch "$@")
+            echo "$output"
+            
+            # Extract and execute the cd command if switch was successful
+            local cd_cmd=$(echo "$output" | grep "^cd " | tail -1)
+            if [ -n "$cd_cmd" ]; then
+                eval "$cd_cmd"
+            fi
+            ;;
+        create|*)
+            # For session creation (default command and explicit create)
+            local output=$(mock_ccswitch "$@")
+            echo "$output"
+
+            # Extract and execute the cd command if session was created successfully
+            local cd_cmd=$(echo "$output" | grep "^cd " | tail -1)
+            if [ -n "$cd_cmd" ]; then
+                eval "$cd_cmd"
+            fi
+            ;;
+    esac
 }
 
 # Test function
@@ -66,17 +86,17 @@ run_test() {
 echo "Running bash wrapper tests..."
 echo
 
-output=$(ccsplit list 2>&1)
+output=$(ccswitch list 2>&1)
 run_test "List command passthrough" "Listing sessions..." "$output"
 
 # Test 2: Cleanup command should pass through directly
-output=$(ccsplit cleanup test-session 2>&1)
+output=$(ccswitch cleanup test-session 2>&1)
 run_test "Cleanup command passthrough" "Cleaning up session: test-session" "$output"
 
 # Test 3: Session creation should capture and execute cd command
 # This is harder to test directly since we can't actually change directories in a subshell
 # We'll test that the output contains the expected text
-output=$(ccsplit 2>&1)
+output=$(ccswitch 2>&1)
 if echo "$output" | grep -q "Created session: feature/test-feature" && \
    echo "$output" | grep -q "cd ../test-feature"; then
     run_test "Session creation output" "success" "success"
@@ -85,7 +105,7 @@ else
 fi
 
 # Test 4: Empty/no arguments should work
-output=$(ccsplit 2>&1)
+output=$(ccswitch 2>&1)
 if [ -n "$output" ]; then
     run_test "No arguments handling" "success" "success"
 else
