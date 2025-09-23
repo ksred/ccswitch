@@ -1,5 +1,7 @@
 # 🔀 ccswitch
 
+Built by [Kyle Redelinghuys](https://ksred.com)
+
 A friendly CLI tool for managing multiple git worktrees, perfect for juggling different features, experiments, or Claude Code sessions without the context-switching headaches.
 
 ## 🎯 What is this?

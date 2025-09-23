@@ -23,7 +23,7 @@ func listSessions(cmd *cobra.Command, args []string) {
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
-		fmt.Println(ui.ErrorStyle.Render("✗ Failed to get current directory"))
+		ui.Error("✗ Failed to get current directory")
 		return
 	}
 
@@ -33,12 +33,12 @@ func listSessions(cmd *cobra.Command, args []string) {
 	// Get sessions
 	sessions, err := manager.ListSessions()
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to list sessions: %v\n"), err)
+		ui.Errorf("✗ Failed to list sessions: %v", err)
 		return
 	}
 
 	if len(sessions) == 0 {
-		fmt.Println(ui.InfoStyle.Render("No active sessions"))
+		ui.Info("No active sessions")
 		return
 	}
 
@@ -47,7 +47,7 @@ func listSessions(cmd *cobra.Command, args []string) {
 	p := tea.NewProgram(selector)
 	
 	if _, err := p.Run(); err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to run selector: %v\n"), err)
+		ui.Errorf("✗ Failed to run selector: %v", err)
 		return
 	}
 	
@@ -61,7 +61,7 @@ func listSessions(cmd *cobra.Command, args []string) {
 	}
 
 	// Output success message with consistent formatting
-	fmt.Printf("%s %s\n", ui.SuccessStyle.Render("✓ Switched to session:"), selected.Name)
+	ui.Successf("✓ Switched to session: %s", selected.Name)
 	fmt.Printf("Branch: %s\n", selected.Branch)
 	fmt.Printf("Location: %s\n", selected.Path)
 
@@ -71,7 +71,7 @@ func listSessions(cmd *cobra.Command, args []string) {
 	// If shell integration is not active, show a helpful message
 	if !utils.IsShellIntegrationActive() {
 		fmt.Println()
-		fmt.Println(ui.InfoStyle.Render("💡 Note: Shell integration is not active."))
+		ui.Info("💡 Note: Shell integration is not active.")
 		fmt.Println(utils.GetShellIntegrationInstructions())
 	}
 }

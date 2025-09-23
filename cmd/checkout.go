@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/ksred/ccswitch/internal/config"
 	"github.com/ksred/ccswitch/internal/errors"
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
@@ -15,15 +13,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCreateCmd() *cobra.Command {
+func newCheckoutCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "create",
-		Short: "Create a new session",
-		Run:   createSession,
+		Use:   "checkout <branch>",
+		Short: "Checkout an existing branch into a new worktree",
+		Args:  cobra.ExactArgs(1),
+		Run:   checkoutSession,
 	}
 }
 
-func createSession(cmd *cobra.Command, args []string) {
+func checkoutSession(cmd *cobra.Command, args []string) {
+	branchName := strings.TrimSpace(args[0])
+
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -34,60 +35,38 @@ func createSession(cmd *cobra.Command, args []string) {
 	// Create session manager
 	manager := session.NewManager(currentDir)
 
-	// Get description from user
-	fmt.Print(ui.TitleStyle.Render("🚀 What are you working on? "))
-	
-	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
-		return
-	}
-	
-	description := strings.TrimSpace(scanner.Text())
-	if description == "" {
-		ui.Error("✗ Description cannot be empty")
-		return
-	}
-
-	// Create the session
-	if err := manager.CreateSession(description); err != nil {
+	// Checkout the session
+	if err := manager.CheckoutSession(branchName); err != nil {
 		ui.Errorf("✗ %s", err)
-		
+
 		// Provide helpful tips based on error
 		hint := errors.ErrorHint(err)
 		if hint != "" {
 			ui.Infof("  Tip: %s", hint)
 		}
-		
-		// Special handling for branch exists error
-		if errors.IsBranchExists(err) {
-			cfg, _ := config.Load()
-			branchName := cfg.Branch.Prefix + utils.Slugify(description)
-			ui.Infof("  Branch: %s", branchName)
-		}
+
 		return
 	}
 
 	// Success!
-	sessionName := utils.Slugify(description)
-	cfg, _ := config.Load()
-	branchName := cfg.Branch.Prefix + sessionName
+	sessionName := utils.Slugify(branchName)
 	repoName := filepath.Base(currentDir)
-	
+
 	// Get the full worktree path
 	homeDir, _ := os.UserHomeDir()
 	worktreePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName, sessionName)
-	
-	ui.Successf("✓ Created session: %s", sessionName)
+
+	ui.Successf("✓ Checked out session: %s", sessionName)
 	ui.Infof("Branch: %s", branchName)
 	ui.Infof("Location: ~/.ccswitch/worktrees/%s/%s", repoName, sessionName)
-	
+
 	// Output the cd command for the shell wrapper to execute on a separate line
 	fmt.Printf("\ncd %s\n", worktreePath)
-	
+
 	// If shell integration is not active, show a helpful message
 	if !utils.IsShellIntegrationActive() {
 		fmt.Println()
-		ui.Info("💡 Note: Shell integration is not active.")
+		ui.Infof("💡 Note: Shell integration is not active.")
 		ui.Info(utils.GetShellIntegrationInstructions())
 	}
 }

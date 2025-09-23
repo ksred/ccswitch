@@ -14,6 +14,7 @@ context-switching overhead of stashing changes or switching branches.
 
 Key commands:
   ccswitch                    Create a new work session
+  ccswitch checkout <branch>  Checkout an existing branch into a new worktree
   ccswitch list               Show and switch between sessions
   ccswitch cleanup            Remove a session interactively
   ccswitch cleanup --all      Remove ALL worktrees at once (bulk cleanup)
@@ -22,6 +23,7 @@ Key commands:
 	}
 
 	rootCmd.AddCommand(newCreateCmd())
+	rootCmd.AddCommand(newCheckoutCmd())
 	rootCmd.AddCommand(newListCmd())
 	rootCmd.AddCommand(newCleanupCmd())
 	rootCmd.AddCommand(newInfoCmd())

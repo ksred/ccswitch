@@ -24,34 +24,34 @@ func createPullRequest(cmd *cobra.Command, args []string) {
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
-		fmt.Println(ui.ErrorStyle.Render("✗ Failed to get current directory"))
+		ui.Error("✗ Failed to get current directory")
 		return
 	}
 
 	// Check if gh CLI is available
 	if !isGitHubCLIAvailable() {
-		fmt.Println(ui.ErrorStyle.Render("✗ GitHub CLI (gh) is not installed or not in PATH"))
-		fmt.Println(ui.InfoStyle.Render("  Install GitHub CLI: https://cli.github.com/"))
+		ui.Error("✗ GitHub CLI (gh) is not installed or not in PATH")
+		ui.Info("  Install GitHub CLI: https://cli.github.com/")
 		return
 	}
 
 	// Check if we're in a git repository
 	if !git.IsGitRepository(currentDir) {
-		fmt.Println(ui.ErrorStyle.Render("✗ Not in a git repository"))
+		ui.Error("✗ Not in a git repository")
 		return
 	}
 
 	// Get current branch
 	currentBranch, err := git.GetCurrentBranch(currentDir)
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to get current branch: %v\n"), err)
+		ui.Errorf("✗ Failed to get current branch: %v", err)
 		return
 	}
 
 	// Check if we're on main/master branch
 	if currentBranch == "main" || currentBranch == "master" {
-		fmt.Println(ui.ErrorStyle.Render("✗ Cannot create PR from main/master branch"))
-		fmt.Println(ui.InfoStyle.Render("  Switch to a feature branch first using 'ccswitch list'"))
+		ui.Error("✗ Cannot create PR from main/master branch")
+		ui.Info("  Switch to a feature branch first using 'ccswitch list'")
 		return
 	}
 
@@ -59,7 +59,7 @@ func createPullRequest(cmd *cobra.Command, args []string) {
 	manager := session.NewManager(currentDir)
 	sessions, err := manager.ListSessions()
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to list sessions: %v\n"), err)
+		ui.Errorf("✗ Failed to list sessions: %v", err)
 		return
 	}
 
@@ -73,50 +73,50 @@ func createPullRequest(cmd *cobra.Command, args []string) {
 	}
 
 	if currentSession == nil {
-		fmt.Println(ui.ErrorStyle.Render("✗ Not in a ccswitch session directory"))
-		fmt.Println(ui.InfoStyle.Render("  Use 'ccswitch list' to enter a session first"))
+		ui.Error("✗ Not in a ccswitch session directory")
+		ui.Info("  Use 'ccswitch list' to enter a session first")
 		return
 	}
 
-	fmt.Printf(ui.TitleStyle.Render("🚀 Creating pull request for session: %s\n"), currentSession.Name)
-	fmt.Printf(ui.InfoStyle.Render("  Branch: %s\n"), currentBranch)
+	ui.Titlef("🚀 Creating pull request for session: %s", currentSession.Name)
+	ui.Infof("  Branch: %s", currentBranch)
 
 	// Check if branch has commits ahead of main
 	hasCommits, err := checkBranchHasCommits(currentDir, currentBranch)
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to check branch commits: %v\n"), err)
+		ui.Errorf("✗ Failed to check branch commits: %v", err)
 		return
 	}
 
 	if !hasCommits {
-		fmt.Println(ui.ErrorStyle.Render("✗ No commits found on this branch"))
-		fmt.Println(ui.InfoStyle.Render("  Make some commits before creating a PR"))
+		ui.Error("✗ No commits found on this branch")
+		ui.Info("  Make some commits before creating a PR")
 		return
 	}
 
 	// Push the branch if needed
-	fmt.Println(ui.InfoStyle.Render("📤 Pushing branch to remote..."))
+	ui.Info("📤 Pushing branch to remote...")
 	if err := pushBranch(currentDir, currentBranch); err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to push branch: %v\n"), err)
+		ui.Errorf("✗ Failed to push branch: %v", err)
 		return
 	}
 
 	// Create PR using gh CLI
-	fmt.Println(ui.InfoStyle.Render("📝 Creating pull request..."))
+	ui.Info("📝 Creating pull request...")
 	prURL, err := createPRWithGH(currentDir, currentSession.Name)
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to create PR: %v\n"), err)
+		ui.Errorf("✗ Failed to create PR: %v", err)
 		return
 	}
 
-	fmt.Printf(ui.SuccessStyle.Render("✓ Pull request created successfully!\n"))
-	fmt.Printf(ui.InfoStyle.Render("  URL: %s\n"), prURL)
+	ui.Successf("✓ Pull request created successfully!")
+	ui.Infof("  URL: %s", prURL)
 
 	// Open in browser
-	fmt.Println(ui.InfoStyle.Render("🌐 Opening PR in browser..."))
+	ui.Info("🌐 Opening PR in browser...")
 	if err := openInBrowser(prURL); err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to open browser: %v\n"), err)
-		fmt.Println(ui.InfoStyle.Render("  You can manually open the URL above"))
+		ui.Errorf("✗ Failed to open browser: %v", err)
+		ui.Info("  You can manually open the URL above")
 	}
 }
 

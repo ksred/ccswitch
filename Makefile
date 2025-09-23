@@ -10,7 +10,7 @@ all: build
 
 # Build the binary
 build:
-	@echo "Building $(BINARY_NAME)..."
+	@go run internal/buildhelper/main.go info "Building $(BINARY_NAME)..."
 	@go build -o $(BINARY_NAME) .
 
 # Run the application (interactive)
@@ -31,13 +31,14 @@ run-switch: build
 
 # Install the binary to GOPATH/bin
 install: build
-	@echo "Installing $(BINARY_NAME)..."
-	@go install
+	@go run internal/buildhelper/main.go info "Installing $(BINARY_NAME)..."
 	@FIRST_GOPATH=$$(go env GOPATH | cut -d':' -f1) && \
-		echo "✓ Installed binary to $$FIRST_GOPATH/bin/$(BINARY_NAME)"
+		cp $(BINARY_NAME) "$$FIRST_GOPATH/bin/$(BINARY_NAME)" && \
+		chmod +x "$$FIRST_GOPATH/bin/$(BINARY_NAME)" && \
+		go run internal/buildhelper/main.go success "✓ Installed binary to $$FIRST_GOPATH/bin/$(BINARY_NAME)"
 	@echo ""
 	@# Install shell integration
-	@echo "Setting up shell integration..."
+	@go run internal/buildhelper/main.go info "Setting up shell integration..."
 	@SHELL_CONFIG=""; \
 	SHELL_NAME=""; \
 	if [ -n "$$ZSH_VERSION" ] || [ "$$SHELL" = "/bin/zsh" ] || [ "$$SHELL" = "/usr/bin/zsh" ]; then \
@@ -53,16 +54,16 @@ install: build
 			echo "" >> "$$SHELL_CONFIG"; \
 			echo "# ccswitch shell integration" >> "$$SHELL_CONFIG"; \
 			echo 'eval "$$(ccswitch shell-init)"' >> "$$SHELL_CONFIG"; \
-			echo "✓ Added shell integration to $$SHELL_CONFIG"; \
+			go run internal/buildhelper/main.go success "✓ Added shell integration to $$SHELL_CONFIG"; \
 			echo ""; \
 			echo "To activate now, run:"; \
 			echo "  source $$SHELL_CONFIG"; \
 		else \
-			echo "✓ Shell integration already installed in $$SHELL_CONFIG"; \
+			go run internal/buildhelper/main.go success "✓ Shell integration already installed in $$SHELL_CONFIG"; \
 		fi; \
 	else \
 		echo ""; \
-		echo "⚠️  Could not detect shell type. To enable shell integration, add this to your shell config:"; \
+		go run internal/buildhelper/main.go warning "⚠️  Could not detect shell type. To enable shell integration, add this to your shell config:"; \
 		echo ""; \
 		echo "  eval \"\$$(ccswitch shell-init)\""; \
 		echo ""; \
@@ -73,12 +74,12 @@ install: build
 
 # Uninstall ccswitch
 uninstall:
-	@echo "Uninstalling $(BINARY_NAME)..."
+	@go run internal/buildhelper/main.go info "Uninstalling $(BINARY_NAME)..."
 	@FIRST_GOPATH=$$(go env GOPATH | cut -d':' -f1) && \
 		rm -f "$$FIRST_GOPATH/bin/$(BINARY_NAME)" && \
-		echo "✓ Removed binary from $$FIRST_GOPATH/bin/$(BINARY_NAME)"
+		go run internal/buildhelper/main.go success "✓ Removed binary from $$FIRST_GOPATH/bin/$(BINARY_NAME)"
 	@echo ""
-	@echo "Removing shell integration..."
+	@go run internal/buildhelper/main.go info "Removing shell integration..."
 	@SHELL_CONFIG=""; \
 	if [ -f "$$HOME/.zshrc" ]; then \
 		SHELL_CONFIG="$$HOME/.zshrc"; \
@@ -93,54 +94,54 @@ uninstall:
 			grep -v "source.*ccswitch/bash.txt" | \
 			grep -v "# ccswitch shell integration" > "$$SHELL_CONFIG"; \
 			rm "$$SHELL_CONFIG.bak"; \
-			echo "✓ Removed shell integration from $$SHELL_CONFIG"; \
+			go run internal/buildhelper/main.go success "✓ Removed shell integration from $$SHELL_CONFIG"; \
 		else \
-			echo "✓ No shell integration found to remove"; \
+			go run internal/buildhelper/main.go success "✓ No shell integration found to remove"; \
 		fi; \
 	fi
 	@echo ""
-	@echo "Uninstall complete!"
+	@go run internal/buildhelper/main.go success "Uninstall complete!"
 
 # Run all tests
 test: test-unit test-integration
 
 # Run unit tests only (no git required)
 test-unit:
-	@echo "Running unit tests..."
+	@go run internal/buildhelper/main.go info "Running unit tests..."
 	@go test -v -run "^Test(Slugify|ParseWorktrees|SessionItem|GetCurrentDir|RunCmd|WorktreeType)" ./...
 
 # Run integration tests (requires git)
 test-integration:
-	@echo "Running integration tests..."
+	@go run internal/buildhelper/main.go info "Running integration tests..."
 	@go test -v -run "^Test(CreateSession|ListSessions|CleanupSession|GetActiveSessions|Integration)" ./... || true
 
 # Run tests in Docker container (for clean git environment)
 test-docker:
-	@echo "Building Docker test environment..."
+	@go run internal/buildhelper/main.go info "Building Docker test environment..."
 	@docker build -t ccsplit-test -f Dockerfile.test .
-	@echo "Running tests in Docker..."
+	@go run internal/buildhelper/main.go info "Running tests in Docker..."
 	@docker run --rm ccsplit-test
 
 # Generate coverage report
 coverage:
-	@echo "Generating coverage report..."
+	@go run internal/buildhelper/main.go info "Generating coverage report..."
 	@go test -coverprofile=$(COVERAGE_FILE) ./...
 	@go tool cover -html=$(COVERAGE_FILE) -o coverage.html
-	@echo "Coverage report generated at coverage.html"
+	@go run internal/buildhelper/main.go success "Coverage report generated at coverage.html"
 
 # Run benchmarks
 bench:
-	@echo "Running benchmarks..."
+	@go run internal/buildhelper/main.go info "Running benchmarks..."
 	@go test -bench=. -benchmem ./...
 
 # Test the bash wrapper
 test-bash:
-	@echo "Testing bash wrapper..."
+	@go run internal/buildhelper/main.go info "Testing bash wrapper..."
 	@bash bash_wrapper_test.sh
 
 # Clean build artifacts
 clean:
-	@echo "Cleaning..."
+	@go run internal/buildhelper/main.go info "Cleaning..."
 	@rm -f $(BINARY_NAME)
 	@rm -f $(COVERAGE_FILE)
 	@rm -f coverage.html
@@ -148,12 +149,12 @@ clean:
 
 # Format code
 fmt:
-	@echo "Formatting code..."
+	@go run internal/buildhelper/main.go info "Formatting code..."
 	@go fmt ./...
 
 # Run linter
 lint:
-	@echo "Running linter..."
+	@go run internal/buildhelper/main.go info "Running linter..."
 	@golangci-lint run || echo "Install golangci-lint: https://golangci-lint.run/usage/install/"
 
 # Show help

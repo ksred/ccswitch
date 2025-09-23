@@ -99,6 +99,55 @@ func (m *Manager) CreateSession(description string) error {
 	return nil
 }
 
+// CheckoutSession creates a worktree for an existing branch
+func (m *Manager) CheckoutSession(branchName string) error {
+	sessionName := utils.Slugify(branchName)
+
+	// Check if branch exists
+	if !m.branchManager.Exists(branchName) {
+		return fmt.Errorf("%w: %s", errors.ErrBranchNotFound, branchName)
+	}
+
+	// Check if we're already on the branch we want to checkout
+	currentBranch, err := m.branchManager.GetCurrent()
+	if err == nil && currentBranch == branchName {
+		return fmt.Errorf("%w: %s", errors.ErrAlreadyOnBranch, branchName)
+	}
+
+	// Get worktree path
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return errors.Wrap(err, "failed to get home directory")
+	}
+
+	// Get repo name from the main repo path
+	mainRepoPath, err := git.GetMainRepoPath(m.repoPath)
+	if err != nil {
+		mainRepoPath = m.repoPath
+	}
+	repoName := filepath.Base(mainRepoPath)
+
+	worktreeBasePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName)
+	worktreePath := filepath.Join(worktreeBasePath, sessionName)
+
+	// Check if worktree directory already exists
+	if _, err := os.Stat(worktreePath); err == nil {
+		return fmt.Errorf("%w: %s", errors.ErrWorktreeExists, worktreePath)
+	}
+
+	// Ensure the worktree base directory exists
+	if err := os.MkdirAll(worktreeBasePath, 0755); err != nil {
+		return errors.Wrap(err, "failed to create worktree directory")
+	}
+
+	// Create worktree for existing branch
+	if err := m.worktreeManager.Create(worktreePath, branchName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ListSessions returns all active sessions
 func (m *Manager) ListSessions() ([]git.SessionInfo, error) {
 	worktrees, err := m.worktreeManager.List()

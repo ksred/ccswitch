@@ -33,33 +33,33 @@ func newConfigCmd() *cobra.Command {
 func showConfig(cmd *cobra.Command, args []string) {
 	cfg, err := config.Load()
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to load config: %v\n"), err)
+		ui.Errorf("✗ Failed to load config: %v", err)
 		return
 	}
 
-	fmt.Println(ui.TitleStyle.Render("⚙️  ccswitch Configuration"))
+	ui.Title("⚙️  ccswitch Configuration")
 	fmt.Println()
 
-	fmt.Println(ui.SuccessStyle.Render("Branch:"))
-	fmt.Printf("  Prefix: %s\n", ui.InfoStyle.Render(cfg.Branch.Prefix))
+	ui.Success("Branch:")
+	ui.Infof("  Prefix: %s", cfg.Branch.Prefix)
 	fmt.Println()
 
-	fmt.Println(ui.SuccessStyle.Render("Worktree:"))
-	fmt.Printf("  Relative path: %s\n", ui.InfoStyle.Render(cfg.Worktree.RelativePath))
+	ui.Success("Worktree:")
+	ui.Infof("  Relative path: %s", cfg.Worktree.RelativePath)
 	fmt.Println()
 
-	fmt.Println(ui.SuccessStyle.Render("UI:"))
-	fmt.Printf("  Show emoji: %s\n", ui.InfoStyle.Render(fmt.Sprintf("%v", cfg.UI.ShowEmoji)))
-	fmt.Printf("  Color scheme: %s\n", ui.InfoStyle.Render(cfg.UI.ColorScheme))
+	ui.Success("UI:")
+	ui.Infof("  Show emoji: %v", cfg.UI.ShowEmoji)
+	ui.Infof("  Color scheme: %s", cfg.UI.ColorScheme)
 	fmt.Println()
 
-	fmt.Println(ui.SuccessStyle.Render("Git:"))
-	fmt.Printf("  Default branch: %s\n", ui.InfoStyle.Render(cfg.Git.DefaultBranch))
-	fmt.Printf("  Auto fetch: %s\n", ui.InfoStyle.Render(fmt.Sprintf("%v", cfg.Git.AutoFetch)))
+	ui.Success("Git:")
+	ui.Infof("  Default branch: %s", cfg.Git.DefaultBranch)
+	ui.Infof("  Auto fetch: %v", cfg.Git.AutoFetch)
 	fmt.Println()
 
 	configPath := config.GetConfigPath()
-	fmt.Printf("Config file: %s\n", ui.InfoStyle.Render(configPath))
+	ui.Infof("Config file: %s", configPath)
 }
 
 func showConfigPath(cmd *cobra.Command, args []string) {
@@ -69,12 +69,12 @@ func showConfigPath(cmd *cobra.Command, args []string) {
 func initConfig(cmd *cobra.Command, args []string) {
 	cfg := config.DefaultConfig()
 	if err := cfg.Save(); err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to create config: %v\n"), err)
+		ui.Errorf("✗ Failed to create config: %v", err)
 		return
 	}
 
 	configPath := config.GetConfigPath()
-	fmt.Printf(ui.SuccessStyle.Render("✓ Created default config at: %s\n"), configPath)
+	ui.Successf("✓ Created default config at: %s", configPath)
 	fmt.Println()
 	fmt.Println("You can now edit this file to customize ccswitch behavior.")
 }

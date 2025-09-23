@@ -35,6 +35,11 @@ func IsBranchExists(err error) bool {
 	return errors.Is(err, ErrBranchExists)
 }
 
+// IsBranchNotFound checks if the error is due to branch not found
+func IsBranchNotFound(err error) bool {
+	return errors.Is(err, ErrBranchNotFound)
+}
+
 // IsWorktreeExists checks if the error is due to worktree already existing
 func IsWorktreeExists(err error) bool {
 	return errors.Is(err, ErrWorktreeExists)
@@ -57,6 +62,8 @@ func ErrorHint(err error) string {
 		return "Use 'git stash' to temporarily save changes"
 	case IsBranchExists(err):
 		return "Use 'git branch -D <branch>' to delete it first"
+	case IsBranchNotFound(err):
+		return "Use 'git branch -a' to see available branches"
 	case IsWorktreeExists(err):
 		return "Use a different description or remove the existing directory"
 	case IsAlreadyOnBranch(err):

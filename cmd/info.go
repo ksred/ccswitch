@@ -22,25 +22,25 @@ func showInfo(cmd *cobra.Command, args []string) {
 	ccSwitchDir := filepath.Join(homeDir, ".ccswitch")
 	worktreesDir := filepath.Join(ccSwitchDir, "worktrees")
 	
-	fmt.Println(ui.TitleStyle.Render("📊 ccswitch Information"))
+	ui.Title("📊 ccswitch Information")
 	fmt.Println()
 	
 	// Paths
-	fmt.Println(ui.SuccessStyle.Render("Paths:"))
-	fmt.Printf("  Config directory: %s\n", ui.InfoStyle.Render(ccSwitchDir))
-	fmt.Printf("  Worktrees stored in: %s\n", ui.InfoStyle.Render(worktreesDir))
+	ui.Success("Paths:")
+	ui.Infof("  Config directory: %s", ccSwitchDir)
+	ui.Infof("  Worktrees stored in: %s", worktreesDir)
 	fmt.Println()
 	
 	// Current repository
 	currentDir, _ := os.Getwd()
 	currentRepo := filepath.Base(currentDir)
-	fmt.Println(ui.SuccessStyle.Render("Current Repository:"))
-	fmt.Printf("  Name: %s\n", ui.InfoStyle.Render(currentRepo))
-	fmt.Printf("  Path: %s\n", ui.InfoStyle.Render(currentDir))
+	ui.Success("Current Repository:")
+	ui.Infof("  Name: %s", currentRepo)
+	ui.Infof("  Path: %s", currentDir)
 	fmt.Println()
 	
 	// Statistics
-	fmt.Println(ui.SuccessStyle.Render("Statistics:"))
+	ui.Success("Statistics:")
 	
 	// Count total worktrees
 	totalWorktrees := 0
@@ -58,11 +58,11 @@ func showInfo(cmd *cobra.Command, args []string) {
 		}
 	}
 	
-	fmt.Printf("  Total repositories: %s\n", ui.InfoStyle.Render(fmt.Sprintf("%d", repoCount)))
-	fmt.Printf("  Total worktrees: %s\n", ui.InfoStyle.Render(fmt.Sprintf("%d", totalWorktrees)))
+	ui.Infof("  Total repositories: %d", repoCount)
+	ui.Infof("  Total worktrees: %d", totalWorktrees)
 	fmt.Println()
 	
 	// Version info
-	fmt.Println(ui.SuccessStyle.Render("Version:"))
-	fmt.Printf("  ccswitch: %s\n", ui.InfoStyle.Render("1.0.0"))
+	ui.Success("Version:")
+	ui.Infof("  ccswitch: %s", "1.0.0")
 }

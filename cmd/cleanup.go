@@ -40,7 +40,7 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
-		fmt.Println(ui.ErrorStyle.Render("✗ Failed to get current directory"))
+		ui.Error("✗ Failed to get current directory")
 		return
 	}
 
@@ -50,12 +50,12 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 	// Get sessions
 	sessions, err := manager.ListSessions()
 	if err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to list sessions: %v\n"), err)
+		ui.Errorf("✗ Failed to list sessions: %v", err)
 		return
 	}
 
 	if len(sessions) == 0 {
-		fmt.Println(ui.InfoStyle.Render("No active sessions to cleanup"))
+		ui.Info("No active sessions to cleanup")
 		return
 	}
 
@@ -72,13 +72,13 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 		sessionName = args[0]
 	} else {
 		// Show numbered list for selection
-		fmt.Println(ui.TitleStyle.Render("🗑️  Select session to cleanup:"))
+		ui.Title("🗑️  Select session to cleanup:")
 		fmt.Println()
-		
+
 		for i, session := range sessions {
-			fmt.Printf("  %d. %s (%s)\n", i+1, session.Name, ui.InfoStyle.Render(session.Branch))
+			ui.Infof("  %d. %s (%s)", i+1, session.Name, session.Branch)
 		}
-		
+
 		fmt.Println()
 		fmt.Print("Enter number (or q to quit): ")
 		
@@ -95,7 +95,7 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 		// Parse number
 		var choice int
 		if _, err := fmt.Sscanf(input, "%d", &choice); err != nil || choice < 1 || choice > len(sessions) {
-			fmt.Println(ui.ErrorStyle.Render("✗ Invalid selection"))
+			ui.Error("✗ Invalid selection")
 			return
 		}
 		
@@ -113,7 +113,7 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 	}
 
 	if targetSession == nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Session not found: %s\n"), sessionName)
+		ui.Errorf("✗ Session not found: %s", sessionName)
 		return
 	}
 
@@ -127,11 +127,11 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 
 	// Remove the session
 	if err := manager.RemoveSession(targetSession.Path, deleteBranch, targetSession.Branch); err != nil {
-		fmt.Printf(ui.ErrorStyle.Render("✗ Failed to cleanup session: %v\n"), err)
+		ui.Errorf("✗ Failed to cleanup session: %v", err)
 		return
 	}
 
-	fmt.Printf(ui.SuccessStyle.Render("✓ Cleaned up session: %s\n"), sessionName)
+	ui.Successf("✓ Cleaned up session: %s", sessionName)
 }
 
 func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
@@ -145,15 +145,15 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 	}
 
 	if len(worktreeSessions) == 0 {
-		fmt.Println(ui.InfoStyle.Render("No worktree sessions to cleanup"))
+		ui.Info("No worktree sessions to cleanup")
 		return
 	}
 
 	// Show what will be deleted
-	fmt.Println(ui.TitleStyle.Render("⚠️  You are about to remove the following worktrees:"))
+	ui.Title("⚠️  You are about to remove the following worktrees:")
 	fmt.Println()
 	for _, session := range worktreeSessions {
-		fmt.Printf("  • %s (%s)\n", session.Name, ui.InfoStyle.Render(session.Branch))
+		ui.Infof("  • %s (%s)", session.Name, session.Branch)
 	}
 	fmt.Println()
 	
@@ -176,9 +176,9 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 	successCount := 0
 	for _, session := range worktreeSessions {
 		if err := manager.RemoveSession(session.Path, deleteBranches, session.Branch); err != nil {
-			fmt.Printf(ui.ErrorStyle.Render("✗ Failed to remove %s: %v\n"), session.Name, err)
+			ui.Errorf("✗ Failed to remove %s: %v", session.Name, err)
 		} else {
-			fmt.Printf(ui.SuccessStyle.Render("✓ Successfully removed: %s\n"), session.Name)
+			ui.Successf("✓ Successfully removed: %s", session.Name)
 			successCount++
 		}
 	}
@@ -186,9 +186,9 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 	// Summary
 	fmt.Println()
 	if successCount == len(worktreeSessions) {
-		fmt.Printf(ui.SuccessStyle.Render("✅ All %d worktrees removed successfully!\n"), successCount)
+		ui.Successf("✅ All %d worktrees removed successfully!", successCount)
 	} else {
-		fmt.Printf(ui.InfoStyle.Render("Removed %d out of %d worktrees\n"), successCount, len(worktreeSessions))
+		ui.Infof("Removed %d out of %d worktrees", successCount, len(worktreeSessions))
 	}
 	
 	// Switch to main/master branch
@@ -203,11 +203,11 @@ func switchToMainBranch() {
 		cmd := exec.Command("git", "checkout", branch)
 		_, err := cmd.CombinedOutput()
 		if err == nil {
-			fmt.Printf(ui.SuccessStyle.Render("✓ Switched to %s branch\n"), branch)
+			ui.Successf("✓ Switched to %s branch", branch)
 			return
 		}
 	}
 	
 	// If we couldn't switch to main or master, just inform the user
-	fmt.Println(ui.InfoStyle.Render("ℹ Could not switch to main/master branch"))
+	ui.Info("ℹ Could not switch to main/master branch")
 }

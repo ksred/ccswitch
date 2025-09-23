@@ -23,3 +23,5 @@ RUN git config --global user.email "test@example.com" && \
 
 # Run tests
 CMD ["go", "test", "-v", "-cover", "./..."]
+
+# Manual edit test
