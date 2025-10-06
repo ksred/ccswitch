@@ -1,0 +1,78 @@
+project_name: ccswitch
+
+builds:
+  - id: ccswitch
+    binary: ccswitch
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -X github.com/ksred/ccswitch/internal/version.Version={{.Version}}
+      - -X github.com/ksred/ccswitch/internal/version.Commit={{.Commit}}
+      - -X github.com/ksred/ccswitch/internal/version.BuildTime={{.Date}}
+    env:
+      - CGO_ENABLED=0
+
+archives:
+  - id: ccswitch
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+
+release:
+  mode: replace
+  header: |
+    ## ccswitch {{ .Version }}
+    
+    A friendly CLI tool for managing multiple git worktrees.
+    
+    ### Installation
+    
+    You can install ccswitch using the install script:
+    
+    ```bash
+    curl -sSL https://raw.githubusercontent.com/ksred/ccswitch/main/install.sh | bash
+    ```
+    
+    Or download the binary for your platform from the assets below.
+    
+    ### What's Changed
+    
+    See the [changelog](https://github.com/ksred/ccswitch/blob/main/CHANGELOG.md) for details.
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^build:'
+      - '^chore:'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+dockers:
+  - image_templates:
+      - "ghcr.io/ksred/ccswitch:{{ .Version }}"
+      - "ghcr.io/ksred/ccswitch:latest"
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - --label=org.opencontainers.image.title=ccswitch
+      - --label=org.opencontainers.image.description=A friendly CLI tool for managing multiple git worktrees
+      - --label=org.opencontainers.image.url=https://github.com/ksred/ccswitch
+      - --label=org.opencontainers.image.source=https://github.com/ksred/ccswitch
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ .Date }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=MIT

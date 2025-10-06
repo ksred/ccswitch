@@ -5,13 +5,19 @@ BINARY_NAME=ccswitch
 GO_FILES=$(shell find . -name '*.go' -not -path "./vendor/*")
 COVERAGE_FILE=coverage.out
 
+# Version information
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT ?= $(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
+BUILD_TIME ?= $(shell date -u '+%Y-%m-%d_%H:%M:%S')
+LDFLAGS = -ldflags "-X github.com/ksred/ccswitch/internal/version.Version=$(VERSION) -X github.com/ksred/ccswitch/internal/version.Commit=$(COMMIT) -X github.com/ksred/ccswitch/internal/version.BuildTime=$(BUILD_TIME)"
+
 # Default target
 all: build
 
 # Build the binary
 build:
 	@go run internal/buildhelper/main.go info "Building $(BINARY_NAME)..."
-	@go build -o $(BINARY_NAME) .
+	@go build $(LDFLAGS) -o $(BINARY_NAME) .
 
 # Run the application (interactive)
 run: build

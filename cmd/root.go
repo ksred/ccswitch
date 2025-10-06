@@ -30,6 +30,7 @@ Key commands:
 	rootCmd.AddCommand(newConfigCmd())
 	rootCmd.AddCommand(newPRCmd())
 	rootCmd.AddCommand(newShellInitCmd())
+	rootCmd.AddCommand(newVersionCmd())
 
 	return rootCmd
 }
