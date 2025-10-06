@@ -85,6 +85,8 @@ jobs:
               format: zip
         checksum:
           name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+        docker_manifests: []
+        dockers: []
         release:
           mode: replace
           header: |
