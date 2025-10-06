@@ -29,8 +29,7 @@ func (s *SessionSelector) Init() tea.Cmd {
 }
 
 func (s *SessionSelector) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch {
 		case key.Matches(msg, key.NewBinding(key.WithKeys("q", "ctrl+c", "esc"))):
 			s.quit = true
@@ -60,7 +59,7 @@ func (s *SessionSelector) View() string {
 	}
 
 	var b strings.Builder
-	
+
 	b.WriteString(TitleStyle.Render("📂 Select session to switch to:"))
 	b.WriteString("\n\n")
 
@@ -69,7 +68,7 @@ func (s *SessionSelector) View() string {
 		if s.cursor == i {
 			cursor = "→ "
 		}
-		
+
 		sessionLine := fmt.Sprintf("%s%s (%s)", cursor, session.Name, session.Branch)
 		if s.cursor == i {
 			b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("202")).Bold(true).Render(sessionLine))

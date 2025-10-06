@@ -44,7 +44,7 @@ func (bm *BranchManager) Delete(name string, force bool) error {
 
 // Exists checks if a branch exists
 func (bm *BranchManager) Exists(name string) bool {
-	cmd := exec.Command("git", "rev-parse", "--verify", "refs/heads/"+name)
+	cmd := exec.Command("git", "rev-parse", "--verify", "refs/heads/"+name) // #nosec G204
 	cmd.Dir = bm.repoPath
 	output, err := cmd.CombinedOutput()
 	return err == nil && strings.TrimSpace(string(output)) != ""

@@ -52,16 +52,16 @@ func TestErrorCheckers(t *testing.T) {
 		{"IsUncommittedChanges true", ErrUncommittedChanges, IsUncommittedChanges, true},
 		{"IsUncommittedChanges false", ErrBranchExists, IsUncommittedChanges, false},
 		{"IsUncommittedChanges wrapped", Wrap(ErrUncommittedChanges, "context"), IsUncommittedChanges, true},
-		
+
 		{"IsBranchExists true", ErrBranchExists, IsBranchExists, true},
 		{"IsBranchExists false", ErrWorktreeExists, IsBranchExists, false},
-		
+
 		{"IsWorktreeExists true", ErrWorktreeExists, IsWorktreeExists, true},
 		{"IsWorktreeExists false", ErrSessionNotFound, IsWorktreeExists, false},
-		
+
 		{"IsAlreadyOnBranch true", ErrAlreadyOnBranch, IsAlreadyOnBranch, true},
 		{"IsAlreadyOnBranch false", ErrNoSessions, IsAlreadyOnBranch, false},
-		
+
 		{"IsSessionNotFound true", ErrSessionNotFound, IsSessionNotFound, true},
 		{"IsSessionNotFound false", ErrBranchNotFound, IsSessionNotFound, false},
 	}
@@ -149,7 +149,7 @@ func TestErrorConstants(t *testing.T) {
 			t.Errorf("Duplicate error message: %q", msg)
 		}
 		seen[msg] = true
-		
+
 		if msg == "" {
 			t.Error("Error constant has empty message")
 		}

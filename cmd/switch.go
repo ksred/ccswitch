@@ -4,22 +4,29 @@ import (
 	"fmt"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
+	"github.com/ksred/ccswitch/internal/git"
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
 	"github.com/ksred/ccswitch/internal/utils"
 	"github.com/spf13/cobra"
 )
 
-func newListCmd() *cobra.Command {
+func newSwitchCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "list",
-		Short: "List and switch to sessions interactively",
-		Run:   listSessions,
+		Use:   "switch <session>",
+		Short: "Switch to a specific session",
+		Long: `Switch to a specific session by name.
+
+The session name can be a partial match or the full name.
+If multiple sessions match, the first one is selected.`,
+		Args: cobra.ExactArgs(1),
+		Run:  switchSession,
 	}
 }
 
-func listSessions(cmd *cobra.Command, args []string) {
+func switchSession(cmd *cobra.Command, args []string) {
+	sessionName := args[0]
+
 	// Get current directory
 	currentDir, err := os.Getwd()
 	if err != nil {
@@ -42,21 +49,21 @@ func listSessions(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	// Use interactive selector
-	selector := ui.NewSessionSelector(sessions)
-	p := tea.NewProgram(selector)
-
-	if _, err := p.Run(); err != nil {
-		ui.Errorf("✗ Failed to run selector: %v", err)
-		return
+	// Find the session
+	var selected *git.SessionInfo
+	for _, s := range sessions {
+		if s.Name == sessionName || s.Branch == sessionName {
+			selected = &s
+			break
+		}
 	}
 
-	if selector.IsQuit() {
-		return
-	}
-
-	selected := selector.GetSelected()
 	if selected == nil {
+		ui.Errorf("✗ Session '%s' not found", sessionName)
+		ui.Info("Available sessions:")
+		for _, s := range sessions {
+			fmt.Printf("  %s (%s)\n", s.Name, s.Branch)
+		}
 		return
 	}
 

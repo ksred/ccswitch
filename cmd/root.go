@@ -16,6 +16,7 @@ Key commands:
   ccswitch                    Create a new work session
   ccswitch checkout <branch>  Checkout an existing branch into a new worktree
   ccswitch list               Show and switch between sessions
+  ccswitch switch <session>   Switch to a specific session
   ccswitch cleanup            Remove a session interactively
   ccswitch cleanup --all      Remove ALL worktrees at once (bulk cleanup)
   ccswitch pr                 Create a pull request for current session`,
@@ -25,6 +26,7 @@ Key commands:
 	rootCmd.AddCommand(newCreateCmd())
 	rootCmd.AddCommand(newCheckoutCmd())
 	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(newSwitchCmd())
 	rootCmd.AddCommand(newCleanupCmd())
 	rootCmd.AddCommand(newInfoCmd())
 	rootCmd.AddCommand(newConfigCmd())

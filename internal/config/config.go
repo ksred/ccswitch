@@ -16,8 +16,8 @@ type Config struct {
 		RelativePath string `yaml:"relative_path"`
 	} `yaml:"worktree"`
 	UI struct {
-		ShowEmoji    bool   `yaml:"show_emoji"`
-		ColorScheme  string `yaml:"color_scheme"`
+		ShowEmoji   bool   `yaml:"show_emoji"`
+		ColorScheme string `yaml:"color_scheme"`
 	} `yaml:"ui"`
 	Git struct {
 		DefaultBranch string `yaml:"default_branch"`
@@ -45,9 +45,9 @@ func Load() (*Config, error) {
 	}
 
 	configPath := filepath.Join(homeDir, ".ccswitch", "config.yaml")
-	
+
 	// Check if config file exists
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	if _, statErr := os.Stat(configPath); os.IsNotExist(statErr) {
 		// Return default config if file doesn't exist
 		return DefaultConfig(), nil
 	}
@@ -89,18 +89,18 @@ func (c *Config) Save() error {
 	}
 
 	configDir := filepath.Join(homeDir, ".ccswitch")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
-		return err
+	if mkdirErr := os.MkdirAll(configDir, 0755); mkdirErr != nil {
+		return mkdirErr
 	}
 
 	configPath := filepath.Join(configDir, "config.yaml")
-	
+
 	data, err := yaml.Marshal(c)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(configPath, data, 0644)
+	return os.WriteFile(configPath, data, 0600)
 }
 
 // GetConfigPath returns the path to the config file

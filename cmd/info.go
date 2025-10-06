@@ -21,16 +21,16 @@ func showInfo(cmd *cobra.Command, args []string) {
 	homeDir, _ := os.UserHomeDir()
 	ccSwitchDir := filepath.Join(homeDir, ".ccswitch")
 	worktreesDir := filepath.Join(ccSwitchDir, "worktrees")
-	
+
 	ui.Title("📊 ccswitch Information")
 	fmt.Println()
-	
+
 	// Paths
 	ui.Success("Paths:")
 	ui.Infof("  Config directory: %s", ccSwitchDir)
 	ui.Infof("  Worktrees stored in: %s", worktreesDir)
 	fmt.Println()
-	
+
 	// Current repository
 	currentDir, _ := os.Getwd()
 	currentRepo := filepath.Base(currentDir)
@@ -38,14 +38,14 @@ func showInfo(cmd *cobra.Command, args []string) {
 	ui.Infof("  Name: %s", currentRepo)
 	ui.Infof("  Path: %s", currentDir)
 	fmt.Println()
-	
+
 	// Statistics
 	ui.Success("Statistics:")
-	
+
 	// Count total worktrees
 	totalWorktrees := 0
 	repoCount := 0
-	
+
 	if entries, err := os.ReadDir(worktreesDir); err == nil {
 		for _, entry := range entries {
 			if entry.IsDir() {
@@ -57,11 +57,11 @@ func showInfo(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-	
+
 	ui.Infof("  Total repositories: %d", repoCount)
 	ui.Infof("  Total worktrees: %d", totalWorktrees)
 	fmt.Println()
-	
+
 	// Version info
 	ui.Success("Version:")
 	ui.Infof("  ccswitch: %s", "1.0.0")

@@ -20,7 +20,7 @@ func GetShellIntegrationInstructions() string {
 Then reload your shell:
   source ~/.zshrc`
 	}
-	
+
 	return `To enable automatic directory switching, add this to your ~/.bashrc:
   eval "$(ccswitch shell-init)"
   

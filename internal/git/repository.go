@@ -29,7 +29,7 @@ func GetMainRepoPath(dir string) (string, error) {
 		return "", err
 	}
 	gitDir := strings.TrimSpace(string(output))
-	
+
 	// If gitDir is just ".git", we're in the main repo already
 	if gitDir == ".git" {
 		cmd = exec.Command("git", "rev-parse", "--show-toplevel")
@@ -40,10 +40,10 @@ func GetMainRepoPath(dir string) (string, error) {
 		}
 		return strings.TrimSpace(string(output)), nil
 	}
-	
+
 	// The main repo path is the parent of the .git directory
 	mainPath := filepath.Dir(gitDir)
-	
+
 	// If the path ends with .git, it's already correct
 	// If not, we might be in the main repo already
 	if !strings.HasSuffix(gitDir, ".git") {
@@ -56,7 +56,7 @@ func GetMainRepoPath(dir string) (string, error) {
 		}
 		mainPath = strings.TrimSpace(string(output))
 	}
-	
+
 	return mainPath, nil
 }
 
@@ -66,7 +66,7 @@ func IsGitRepository(dir string) bool {
 	if err == nil {
 		return true
 	}
-	
+
 	// Check if we're in a worktree or subdirectory
 	cmd := exec.Command("git", "rev-parse", "--git-dir")
 	cmd.Dir = dir

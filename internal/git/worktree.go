@@ -52,10 +52,10 @@ func (wm *WorktreeManager) Remove(path string) error {
 func ParseWorktrees(output string) []Worktree {
 	var worktrees []Worktree
 	lines := strings.Split(strings.TrimSpace(output), "\n")
-	
+
 	var currentWorktree Worktree
 	branchRegex := regexp.MustCompile(`^branch refs/heads/(.+)$`)
-	
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -65,7 +65,7 @@ func ParseWorktrees(output string) []Worktree {
 			}
 			continue
 		}
-		
+
 		if strings.HasPrefix(line, "worktree ") {
 			currentWorktree.Path = strings.TrimPrefix(line, "worktree ")
 		} else if matches := branchRegex.FindStringSubmatch(line); len(matches) > 1 {
@@ -74,18 +74,18 @@ func ParseWorktrees(output string) []Worktree {
 			currentWorktree.Commit = strings.TrimPrefix(line, "HEAD ")
 		}
 	}
-	
+
 	if currentWorktree.Path != "" {
 		worktrees = append(worktrees, currentWorktree)
 	}
-	
+
 	return worktrees
 }
 
 // GetSessionsFromWorktrees extracts session information from worktrees
 func GetSessionsFromWorktrees(worktrees []Worktree, repoName string) []SessionInfo {
 	var sessions []SessionInfo
-	
+
 	// First, find and add the main repository
 	for _, wt := range worktrees {
 		// Check if this is the main worktree (not in .ccswitch directory)
@@ -99,7 +99,7 @@ func GetSessionsFromWorktrees(worktrees []Worktree, repoName string) []SessionIn
 			break // There should only be one main repository
 		}
 	}
-	
+
 	// Then add all ccswitch worktrees for this specific repo
 	// The pattern should match worktrees that belong to this repository
 	for _, wt := range worktrees {
@@ -122,6 +122,6 @@ func GetSessionsFromWorktrees(worktrees []Worktree, repoName string) []SessionIn
 			}
 		}
 	}
-	
+
 	return sessions
 }

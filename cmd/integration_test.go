@@ -14,13 +14,13 @@ func TestListCommand_IncludesMain(t *testing.T) {
 func TestSwitchCommand_HandlesMain(t *testing.T) {
 	// Create a buffer to capture output
 	var buf bytes.Buffer
-	
+
 	// Create command with "main" argument
 	cmd := newSwitchCmd()
 	cmd.SetOut(&buf)
 	cmd.SetErr(&buf)
 	cmd.SetArgs([]string{"main"})
-	
+
 	// Execute command
 	err := cmd.Execute()
 	if err != nil {
@@ -28,7 +28,7 @@ func TestSwitchCommand_HandlesMain(t *testing.T) {
 		// We're mainly testing that it doesn't crash
 		return
 	}
-	
+
 	// Check output contains cd command
 	output := buf.String()
 	if strings.Contains(output, "cd ") {

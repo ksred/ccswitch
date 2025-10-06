@@ -10,6 +10,8 @@ import (
 	"github.com/ksred/ccswitch/internal/session"
 	"github.com/ksred/ccswitch/internal/ui"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func newPRCmd() *cobra.Command {
@@ -96,8 +98,8 @@ func createPullRequest(cmd *cobra.Command, args []string) {
 
 	// Push the branch if needed
 	ui.Info("📤 Pushing branch to remote...")
-	if err := pushBranch(currentDir, currentBranch); err != nil {
-		ui.Errorf("✗ Failed to push branch: %v", err)
+	if pushErr := pushBranch(currentDir, currentBranch); pushErr != nil {
+		ui.Errorf("✗ Failed to push branch: %v", pushErr)
 		return
 	}
 
@@ -126,14 +128,14 @@ func isGitHubCLIAvailable() bool {
 }
 
 func checkBranchHasCommits(dir, branch string) (bool, error) {
-	cmd := exec.Command("git", "rev-list", "--count", "main.."+branch)
+	cmd := exec.Command("git", "rev-list", "--count", "main.."+branch) // #nosec G204
 	cmd.Dir = dir
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		return false, err
 	}
-	
+
 	count := strings.TrimSpace(string(output))
 	return count != "0", nil
 }
@@ -143,23 +145,23 @@ func pushBranch(dir, branch string) error {
 	cmd.Dir = dir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	
+
 	return cmd.Run()
 }
 
 func createPRWithGH(dir, sessionName string) (string, error) {
 	// Generate PR title from session name
 	title := strings.ReplaceAll(sessionName, "-", " ")
-	title = strings.Title(title)
-	
+	title = cases.Title(language.English).String(title)
+
 	cmd := exec.Command("gh", "pr", "create", "--title", title, "--body", "Created from ccswitch session: "+sessionName, "--web")
 	cmd.Dir = dir
-	
+
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
-	
+
 	// Extract URL from output
 	lines := strings.Split(string(output), "\n")
 	for _, line := range lines {
@@ -168,13 +170,13 @@ func createPRWithGH(dir, sessionName string) (string, error) {
 			return line, nil
 		}
 	}
-	
+
 	return string(output), nil
 }
 
 func openInBrowser(url string) error {
 	var cmd *exec.Cmd
-	
+
 	switch {
 	case exec.Command("which", "open").Run() == nil: // macOS
 		cmd = exec.Command("open", url)
@@ -185,6 +187,6 @@ func openInBrowser(url string) error {
 	default:
 		return fmt.Errorf("unable to detect platform to open browser")
 	}
-	
+
 	return cmd.Run()
 }

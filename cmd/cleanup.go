@@ -27,12 +27,12 @@ Examples:
   ccswitch cleanup                  # Interactive selection
   ccswitch cleanup my-feature       # Remove specific session
   ccswitch cleanup --all            # Remove all worktrees (with confirmation)`,
-		Args:  cobra.MaximumNArgs(1),
-		Run:   cleanupSession,
+		Args: cobra.MaximumNArgs(1),
+		Run:  cleanupSession,
 	}
-	
+
 	cmd.Flags().Bool("all", false, "Remove ALL worktrees except main/master (bulk cleanup)")
-	
+
 	return cmd
 }
 
@@ -61,7 +61,7 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 
 	// Check if --all flag is set
 	cleanupAll, _ := cmd.Flags().GetBool("all")
-	
+
 	if cleanupAll {
 		cleanupAllSessions(manager, sessions)
 		return
@@ -81,24 +81,24 @@ func cleanupSession(cmd *cobra.Command, args []string) {
 
 		fmt.Println()
 		fmt.Print("Enter number (or q to quit): ")
-		
+
 		scanner := bufio.NewScanner(os.Stdin)
 		if !scanner.Scan() {
 			return
 		}
-		
+
 		input := strings.TrimSpace(scanner.Text())
 		if input == "q" || input == "" {
 			return
 		}
-		
+
 		// Parse number
 		var choice int
 		if _, err := fmt.Sscanf(input, "%d", &choice); err != nil || choice < 1 || choice > len(sessions) {
 			ui.Error("✗ Invalid selection")
 			return
 		}
-		
+
 		sessionName = sessions[choice-1].Name
 	}
 
@@ -156,12 +156,12 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 		ui.Infof("  • %s (%s)", session.Name, session.Branch)
 	}
 	fmt.Println()
-	
+
 	// Confirm deletion
 	fmt.Print("Press Enter to continue or Ctrl+C to cancel...")
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
-	
+
 	// Ask about branch deletion
 	fmt.Println()
 	fmt.Print("Delete associated branches as well? (y/N): ")
@@ -169,9 +169,9 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 	if scanner.Scan() && strings.ToLower(scanner.Text()) == "y" {
 		deleteBranches = true
 	}
-	
+
 	fmt.Println()
-	
+
 	// Remove each session
 	successCount := 0
 	for _, session := range worktreeSessions {
@@ -182,7 +182,7 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 			successCount++
 		}
 	}
-	
+
 	// Summary
 	fmt.Println()
 	if successCount == len(worktreeSessions) {
@@ -190,7 +190,7 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 	} else {
 		ui.Infof("Removed %d out of %d worktrees", successCount, len(worktreeSessions))
 	}
-	
+
 	// Switch to main/master branch
 	switchToMainBranch()
 }
@@ -198,7 +198,7 @@ func cleanupAllSessions(manager *session.Manager, sessions []git.SessionInfo) {
 func switchToMainBranch() {
 	// Try to switch to main first, then master if main doesn't exist
 	branches := []string{"main", "master"}
-	
+
 	for _, branch := range branches {
 		cmd := exec.Command("git", "checkout", branch)
 		_, err := cmd.CombinedOutput()
@@ -207,7 +207,7 @@ func switchToMainBranch() {
 			return
 		}
 	}
-	
+
 	// If we couldn't switch to main or master, just inform the user
 	ui.Info("ℹ Could not switch to main/master branch")
 }

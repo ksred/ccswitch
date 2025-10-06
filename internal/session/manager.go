@@ -29,10 +29,10 @@ func NewManager(repoPath string) *Manager {
 		// Fallback to the provided path if we can't get the main repo
 		mainRepoPath = repoPath
 	}
-	
+
 	repoName := filepath.Base(mainRepoPath)
 	cfg, _ := config.Load()
-	
+
 	return &Manager{
 		worktreeManager: git.NewWorktreeManager(mainRepoPath),
 		branchManager:   git.NewBranchManager(repoPath), // Keep current path for branch operations
@@ -63,14 +63,14 @@ func (m *Manager) CreateSession(description string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get home directory")
 	}
-	
+
 	// Get repo name from the main repo path
 	mainRepoPath, err := git.GetMainRepoPath(m.repoPath)
 	if err != nil {
 		mainRepoPath = m.repoPath
 	}
 	repoName := filepath.Base(mainRepoPath)
-	
+
 	worktreeBasePath := filepath.Join(homeDir, ".ccswitch", "worktrees", repoName)
 	worktreePath := filepath.Join(worktreeBasePath, sessionName)
 
@@ -92,7 +92,7 @@ func (m *Manager) CreateSession(description string) error {
 	// Create worktree
 	if err := m.worktreeManager.Create(worktreePath, branchName); err != nil {
 		// Try to clean up the branch we just created
-		m.branchManager.Delete(branchName, false)
+		_ = m.branchManager.Delete(branchName, false)
 		return err
 	}
 
