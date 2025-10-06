@@ -27,19 +27,19 @@ SKIP_SHELL_INTEGRATION=false
 
 # Print colored output
 print_info() {
-    echo -e "${BLUE}ℹ${NC} $1"
+    echo -e "${BLUE}ℹ${NC} $1" >&2
 }
 
 print_success() {
-    echo -e "${GREEN}✓${NC} $1"
+    echo -e "${GREEN}✓${NC} $1" >&2
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠${NC} $1"
+    echo -e "${YELLOW}⚠${NC} $1" >&2
 }
 
 print_error() {
-    echo -e "${RED}✗${NC} $1"
+    echo -e "${RED}✗${NC} $1" >&2
 }
 
 # Show help
@@ -271,17 +271,25 @@ download_binary() {
             echo $(build_from_source "$platform")
             return
         fi
-        unzip "$archive_path"
+        unzip -q "$archive_path"
     else
         tar -xzf "$archive_path"
     fi
-    
+
     # Remove archive after extraction
     rm "$archive_path"
-    
+
+    # Check if binary was extracted
+    if [ ! -f "$binary_path" ]; then
+        print_error "Binary not found after extraction: $binary_path"
+        print_info "Falling back to building from source..."
+        echo $(build_from_source "$platform")
+        return
+    fi
+
     # Make binary executable
     chmod +x "$binary_path"
-    
+
     echo "$temp_dir/$binary_path"
 }
 
@@ -387,16 +395,16 @@ verify_installation() {
         return 1
     fi
     
-    if ! "$binary_path" --version >/dev/null 2>&1; then
+    if ! "$binary_path" version >/dev/null 2>&1; then
         print_error "Binary is not executable or corrupted"
         return 1
     fi
-    
+
     print_success "Installation verified successfully"
-    
+
     # Show version
     local version_output
-    version_output=$("$binary_path" --version 2>/dev/null || echo "version unknown")
+    version_output=$("$binary_path" version 2>/dev/null || echo "version unknown")
     print_info "Installed version: $version_output"
 }
 
@@ -419,7 +427,7 @@ main() {
     # Download and install binary
     local binary_path
     binary_path=$(download_binary "$VERSION" "$platform")
-    
+
     # Check if we got a valid path
     if [ ! -f "$binary_path" ]; then
         print_error "Failed to obtain binary"
@@ -446,6 +454,6 @@ main() {
 }
 
 # Run main function only if script is executed directly
-if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+if [ -z "${BASH_SOURCE[0]:-}" ] || [ "${BASH_SOURCE[0]:-}" = "${0}" ]; then
     main "$@"
 fi
