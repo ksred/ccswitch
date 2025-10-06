@@ -57,18 +57,8 @@ jobs:
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Version: $VERSION"
     
-    - name: Set up GoReleaser
-      uses: goreleaser/goreleaser-action@v5
-      with:
-        version: latest
-        args: --snapshot --clean
-    
-    - name: Run GoReleaser
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.version }}
+    - name: Create GoReleaser config
       run: |
-        # Create a temporary goreleaser config for snapshot
         cat > .goreleaser.yaml << 'EOF'
         project_name: ccswitch
         builds:
@@ -100,18 +90,25 @@ jobs:
           mode: replace
           header: |
             ## ccswitch {{ .Version }}
-            
+
             A friendly CLI tool for managing multiple git worktrees.
-            
+
             ### Installation
-            
+
             You can install ccswitch using the install script:
-            
+
             ```bash
             curl -sSL https://raw.githubusercontent.com/ksred/ccswitch/main/install.sh | bash
             ```
-            
+
             Or download the binary for your platform from the assets below.
         EOF
-        
-        goreleaser release --clean
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v5
+      with:
+        version: latest
+        args: release --clean
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.version }}
