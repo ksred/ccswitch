@@ -85,8 +85,8 @@ jobs:
               format: zip
         checksum:
           name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
-        docker_manifests: []
-        dockers: []
+        dockers:
+        - skip_push: auto
         release:
           mode: replace
           header: |
@@ -109,7 +109,7 @@ jobs:
       uses: goreleaser/goreleaser-action@v5
       with:
         version: latest
-        args: release --clean --skip-validate
+        args: release --clean --skip-validate --skip=docker
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.version }}
